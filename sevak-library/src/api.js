@@ -13,7 +13,7 @@ async function uploadFile(ref, key, file) {
   if (!(file instanceof File)) return null
   const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
   const path = `${ref}/${key}_${Date.now()}_${safe}`
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true })
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file)
   if (error) throw new Error(`Upload failed (${key}): ${error.message}`)
   return path
 }
