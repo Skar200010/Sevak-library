@@ -4,7 +4,7 @@ import { UPI_APPS, buildUpiUrl } from './upi.js'
 import { recordPayment } from './api.js'
 import { formatINR, formatDate } from './formUtils.js'
 
-export default function CheckoutPage({ application, onDone, onCancel }) {
+export default function CheckoutPage({ application, onDone }) {
   const [selectedApp, setSelectedApp] = useState(null)
   const [txnId, setTxnId] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -129,9 +129,6 @@ export default function CheckoutPage({ application, onDone, onCancel }) {
         {msg && <p className="help-text">{msg}</p>}
 
         <div className="nav-buttons">
-          <button className="btn-secondary" onClick={onCancel}>
-            Pay later
-          </button>
           <button className="btn-primary" onClick={submitTxn} disabled={submitting}>
             {submitting ? 'Submitting...' : 'Submit Transaction ID'}
           </button>

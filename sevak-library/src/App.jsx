@@ -312,7 +312,6 @@ export default function App() {
           setApplication(updated)
           setStage('done')
         }}
-        onCancel={() => setStage('done')}
       />
     )
   }
