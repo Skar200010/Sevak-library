@@ -22,7 +22,7 @@ function LoadingScreen() {
 function DetailRoute({ rows, refresh }) {
   const { id } = useParams()
   const navigate = useNavigate()
-  const row = rows.find((r) => r.id === id)
+  const row = rows.find((r) => String(r.id) === id)
   const onOpen = (r) => navigate(`/admin/applications/${r.id}`)
   return (
     <>
