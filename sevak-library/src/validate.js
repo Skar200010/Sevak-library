@@ -99,6 +99,8 @@ export function isEmptyValue(field, value) {
 }
 
 export function validateField(field, value, allValues) {
+  if (field.readOnly) return ''
+
   if (field.custom === 'identityNumber') {
     return validateIdentityNumber(value, allValues ? allValues.identityProofType : [])
   }

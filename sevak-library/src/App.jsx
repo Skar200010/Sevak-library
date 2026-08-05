@@ -264,14 +264,18 @@ export default function App() {
     if (current === total - 1) {
       setSubmitting(true)
       setSubmitError('')
-      const errs = await validateSection(section, values)
+      const ready = {
+        ...values,
+        endDate: values.endDate || computeEndDate(values.startDate, values.membershipType)
+      }
+      const errs = await validateSection(section, ready)
       setErrors(errs)
       if (Object.values(errs).some(Boolean)) {
         setSubmitting(false)
         return
       }
       try {
-        const row = await submitApplication(values)
+        const row = await submitApplication(ready)
         setApplication(row)
         setStage('checkout')
       } catch (e) {
