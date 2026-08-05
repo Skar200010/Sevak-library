@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { FORM_META, SECTIONS, MEMBERSHIP_PRICES } from './formConfig.js'
 import { validateField, getIdentityMaxLength, validateIdentityDocument } from './validate.js'
 import { buildInitialValues, computeEndDate } from './formUtils.js'
 import { submitApplication } from './api.js'
 import CheckoutPage from './CheckoutPage.jsx'
 import DonePage from './DonePage.jsx'
-import AdminPanel from './AdminPanel.jsx'
 
 function Field({ field, value, onChange, error }) {
   const handleText = (e) => onChange(field.id, e.target.value)
@@ -229,10 +229,6 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  if (window.location.hash.startsWith('#/admin')) {
-    return <AdminPanel />
-  }
-
   const section = SECTIONS[current]
   const total = SECTIONS.length
   const progress = Math.round(((current + 1) / total) * 100)
@@ -364,9 +360,9 @@ export default function App() {
       <footer className="form-footer">
         <p>
           Sevak Library | Being Sevak Charitable Trust |{' '}
-          <a href="#/admin" className="admin-link">
+          <Link to="/admin" className="admin-link">
             Staff Login
-          </a>
+          </Link>
         </p>
       </footer>
     </div>

@@ -58,3 +58,62 @@ export async function getFileUrl(path) {
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, 3600)
   return error ? null : data.signedUrl
 }
+
+export async function rejectApplication(id, reason) {
+  const { data, error } = await supabase.rpc('reject_application', {
+    p_id: id,
+    p_reason: reason || ''
+  })
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function deleteApplication(row) {
+  const paths = [row.passport_photo, row.identity_photo].filter(Boolean)
+  if (paths.length) {
+    const { error: rmErr } = await supabase.storage.from(BUCKET).remove(paths)
+    if (rmErr) throw new Error(`Could not remove files: ${rmErr.message}`)
+  }
+  const { error } = await supabase.from('applications').delete().eq('id', row.id)
+  if (error) throw new Error(error.message)
+}
+
+export async function resendMembershipEmail(applicationId) {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession()
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-membership-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.access_token}`
+    },
+    body: JSON.stringify({ applicationId })
+  })
+  const j = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)
+  return j
+}
+
+export function exportApplicationsCsv(rows) {
+  const headers = [
+    'Reference', 'Status', 'Membership ID', 'Full Name', 'Email', 'Mobile',
+    'Plan', 'Fee', 'Start Date', 'End Date', 'Identity Proof', 'Identity Number',
+    'Transaction ID', 'Created At'
+  ]
+  const esc = (v) => {
+    const s = v == null ? '' : String(v)
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const lines = [headers.join(',')]
+  rows.forEach((r) => {
+    lines.push(
+      [
+        r.ref, r.status, r.membership_id, r.full_name, r.email, r.mobile,
+        r.membership_type, r.membership_fee, r.start_date, r.end_date,
+        r.identity_proof_type, r.identity_number, r.transaction_id, r.created_at
+      ].map(esc).join(',')
+    )
+  })
+  return lines.join('\n')
+}
