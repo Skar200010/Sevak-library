@@ -62,6 +62,7 @@ export default function Applications({ rows, onOpen }) {
   }, [q, status, from, to])
 
   useEffect(() => {
+    if (!bodyRef.current) return
     const ctx = gsap.context(() => {
       gsap.fromTo(
         bodyRef.current.querySelectorAll('.app-row'),

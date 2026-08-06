@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { FORM_META, SECTIONS, MEMBERSHIP_PRICES } from './formConfig.js'
 import { validateField, getIdentityMaxLength, validateIdentityDocument } from './validate.js'
 import { buildInitialValues, computeEndDate } from './formUtils.js'
-import { submitApplication } from './api.js'
+import { submitApplication, sendPaymentReminder } from './api.js'
 import CheckoutPage from './CheckoutPage.jsx'
 import DonePage from './DonePage.jsx'
 
@@ -272,6 +272,7 @@ export default function App() {
       }
       try {
         const row = await submitApplication(ready)
+        sendPaymentReminder(row.id).catch(() => {})
         setApplication(row)
         setStage('checkout')
       } catch (e) {

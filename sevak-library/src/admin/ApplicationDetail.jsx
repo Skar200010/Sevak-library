@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   X, ShieldCheck, BadgeCheck, Mail, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass
 } from 'lucide-react'
-import { getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail } from '../api.js'
+import { getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail, sendPaymentReminder } from '../api.js'
 import { supabase } from '../supabaseClient.js'
 import { statusLabel } from './meta.js'
 import { formatINR, formatDate } from '../formUtils.js'
@@ -60,6 +60,17 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     }
     refresh()
     onClose()
+    setBusy('')
+  }
+
+  const sendReminder = async () => {
+    setBusy('reminder')
+    try {
+      await sendPaymentReminder(row.id)
+      toast('Payment reminder email sent.')
+    } catch (e) {
+      toast(e.message, 'error')
+    }
     setBusy('')
   }
 
@@ -208,6 +219,11 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
           {row.status === 'APPROVED' && (
             <button className="btn-act resend" onClick={resend} disabled={!!busy}>
               {busy === 'resend' ? <Loader2 size={15} className="spin" /> : <Mail size={15} />} Resend email
+            </button>
+          )}
+          {row.status === 'SUBMITTED' && (
+            <button className="btn-act remind" onClick={sendReminder} disabled={!!busy}>
+              {busy === 'reminder' ? <Loader2 size={15} className="spin" /> : <Mail size={15} />} Send payment reminder
             </button>
           )}
           {(row.status === 'SUBMITTED' || row.status === 'PAYMENT_SUBMITTED') && (
