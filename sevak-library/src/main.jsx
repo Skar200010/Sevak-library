@@ -6,6 +6,7 @@ import './index.css'
 
 const AdminApp = lazy(() => import('./admin/AdminApp.jsx'))
 const LoginView = lazy(() => import('./admin/LoginView.jsx'))
+const ResumePayPage = lazy(() => import('./ResumePayPage.jsx'))
 
 function RouteFallback() {
   return (
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<App />} />
+          <Route path="/pay/:ref" element={<ResumePayPage />} />
           <Route path="/admin/login" element={<LoginView />} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>

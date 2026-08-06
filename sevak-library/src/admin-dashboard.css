@@ -1177,6 +1177,12 @@
   background: #fef2f2;
 }
 
+.btn-act.remind {
+  color: #92400e;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
 .btn-act.danger {
   color: #b91c1c;
   border-color: #fecaca;

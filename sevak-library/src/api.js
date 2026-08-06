@@ -78,7 +78,7 @@ export async function deleteApplication(row) {
   if (error) throw new Error(error.message)
 }
 
-export async function resendMembershipEmail(applicationId) {
+async function callEmailFunction(applicationId, type) {
   const {
     data: { session }
   } = await supabase.auth.getSession()
@@ -88,7 +88,22 @@ export async function resendMembershipEmail(applicationId) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.access_token}`
     },
-    body: JSON.stringify({ applicationId })
+    body: JSON.stringify({ applicationId, type })
+  })
+  const j = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)
+  return j
+}
+
+export async function resendMembershipEmail(applicationId) {
+  return callEmailFunction(applicationId, 'membership')
+}
+
+export async function sendPaymentReminder(applicationId) {
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-membership-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ applicationId, type: 'payment' })
   })
   const j = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getApplicationByRef } from './api.js'
 import { formatDate, formatINR } from './formUtils.js'
 
@@ -67,6 +68,12 @@ export default function DonePage({ application, onReset }) {
         <div className="thank-icon">✓</div>
         <h2>Thank you{active?.full_name ? `, ${active.full_name}` : ''}!</h2>
         <p>Your application has been received successfully.</p>
+
+        {active?.status === 'SUBMITTED' && (
+          <Link className="btn-primary" to={`/pay/${active.ref}`}>
+            Complete your payment
+          </Link>
+        )}
 
         {active && (
           <div className="track-card">
