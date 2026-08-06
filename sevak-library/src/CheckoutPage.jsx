@@ -18,7 +18,7 @@ export default function CheckoutPage({ application, onDone }) {
     setMsg('')
     const url = buildUpiUrl(app, {
       vpa: FORM_META.upiId,
-      payee: 'Sevak Library',
+      payee: FORM_META.payeeName,
       amount: fee,
       note: application.payment_ref
     })

@@ -5,11 +5,12 @@ export const FORM_META = {
   description:
     'Thank you for applying for membership in the Sevak Library. Please complete all required details carefully.',
   upiId: '8879035035@okbizaxis',
-  upiIdAlt: ''
+  upiIdAlt: '',
+  payeeName: 'Sevak Library'
 }
 
 export const MEMBERSHIP_PRICES = {
-  Daily: '2',
+  Daily: '250',
   'Half Monthly': '500',
   Monthly: '1650',
   Quarterly: '4950',
