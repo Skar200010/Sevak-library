@@ -71,6 +71,8 @@ export default function CheckoutPage({ application, onDone }) {
           </div>
         </div>
 
+        <h3 className="checkout-subtitle">Step 1 · Scan the QR and pay</h3>
+
         <div className="qr-box">
           <div className="qr-canvas">
             <img
@@ -84,13 +86,28 @@ export default function CheckoutPage({ application, onDone }) {
             UPI ID: <strong>{FORM_META.upiId}</strong>
           </p>
           {FORM_META.upiIdAlt && <p className="upi-id-alt">or {FORM_META.upiIdAlt}</p>}
-          <p className="qr-hint">
-            Scan the QR with any UPI app and enter {formatINR(fee)}, or tap an app below to pay
-            with the amount pre-filled.
-          </p>
         </div>
 
-        <h3 className="checkout-subtitle">Pay {formatINR(fee)} via</h3>
+        <ol className="pay-steps">
+          <li>Open any UPI app on your phone (Google Pay, PhonePe, Paytm, BHIM).</li>
+          <li>Tap the <strong>"Scan any QR code"</strong> option in that app.</li>
+          <li>Point your camera at the QR code above and scan it.</li>
+          <li>Enter the amount <strong>{formatINR(fee)}</strong> and complete the payment.</li>
+          <li>Copy the <strong>Transaction / UTR ID</strong> you receive after paying.</li>
+        </ol>
+
+        <p className="help-text pay-steps-note">
+          Do not refresh or close this page — your application data stays here. Come back after
+          paying and enter the transaction ID below.
+        </p>
+
+        <hr className="checkout-divider" />
+
+        <h3 className="checkout-subtitle">Or pay with an app</h3>
+        <p className="help-text">
+          Optional: your phone app may show a risk warning when opened this way — the QR-scan
+          method above is recommended.
+        </p>
         <div className="app-grid">
           {UPI_APPS.map((app) => (
             <button key={app.id} className="app-btn" onClick={() => pay(app)}>
@@ -107,7 +124,7 @@ export default function CheckoutPage({ application, onDone }) {
 
         <hr className="checkout-divider" />
 
-        <h3 className="checkout-subtitle">Completed the payment?</h3>
+        <h3 className="checkout-subtitle">Step 2 · Enter the transaction ID</h3>
         <p className="help-text">
           Enter the transaction ID / UTR number you received after the payment. Our team will
           verify it before approving your membership.

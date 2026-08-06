@@ -297,6 +297,29 @@ textarea {
   color: var(--muted);
 }
 
+.pay-steps {
+  margin: 16px 0 6px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pay-steps li {
+  font-size: 14.5px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.pay-steps-note {
+  margin-top: 10px;
+  background: var(--green-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
 .nav-buttons {
   display: flex;
   justify-content: space-between;
