@@ -9,7 +9,7 @@ export const FORM_META = {
 }
 
 export const MEMBERSHIP_PRICES = {
-  Daily: '250',
+  Daily: '2',
   'Half Monthly': '500',
   Monthly: '1650',
   Quarterly: '4950',
