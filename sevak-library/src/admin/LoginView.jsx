@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { LibraryBig, Lock, Mail, Eye, EyeOff, Loader2, ShieldCheck, KeyRound, ArrowLeft } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient.js'
+import '../admin-dashboard.css'
 
 export default function LoginView() {
   const [email, setEmail] = useState('')
