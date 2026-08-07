@@ -185,6 +185,41 @@ function buildRenewalEmail(app: any) {
   return { subject, html }
 }
 
+function discountLabel(coupon: any): string {
+  if (!coupon) return 'a special discount'
+  if (coupon.discount_type === 'flat') {
+    return `Rs. ${coupon.discount_value} off your membership fee`
+  }
+  return `${coupon.discount_value}% off your membership fee`
+}
+
+function buildCouponEmail(member: any, coupon: any) {
+  const subject = 'Your Sevak Library discount coupon'
+  const validity = coupon?.valid_until
+    ? `Valid until <strong>${coupon.valid_until}</strong>`
+    : coupon?.valid_from
+      ? `Valid from <strong>${coupon.valid_from}</strong>`
+      : 'No expiry'
+  const minFee = coupon?.min_fee ? `<p style="margin:4px 0 0;color:#5f6368;font-size:12.5px">Applies to membership fees of Rs. ${coupon.min_fee} or more.</p>` : ''
+  const html = shell(`
+    <p>Dear <strong>${member.full_name ?? ''}</strong>,</p>
+    <p>As a valued member of Sevak Library, here is an exclusive discount coupon for you:</p>
+    <div style="text-align:center;margin:20px 0">
+      <div style="display:inline-block;border:2px dashed #1a7f4b;border-radius:12px;background:#e8f5ee;padding:18px 34px">
+        <div style="font-size:12px;color:#126138;letter-spacing:1px;text-transform:uppercase;font-weight:600">Coupon code</div>
+        <div style="font-size:28px;font-weight:800;color:#0b2f1e;letter-spacing:3px;margin-top:4px">${coupon?.code ?? ''}</div>
+      </div>
+    </div>
+    <p style="text-align:center"><strong>${discountLabel(coupon)}</strong></p>
+    ${minFee}
+    <p style="text-align:center;color:#5f6368;font-size:12.5px">${validity}</p>
+    <p>Share this code with our staff when you next join or renew your membership to apply the discount.</p>
+    <p style="text-align:center">${btn(APP_URL, 'Visit Sevak Library')}</p>
+    <p>Thank you for supporting the Vidhya Project. <strong>Turning Pages, Changing Lives.</strong></p>
+  `)
+  return { subject, html }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return json({})
 
@@ -252,6 +287,60 @@ serve(async (req) => {
         sentIds,
         failIds,
       })
+    }
+
+    if (body?.mode === 'coupon' || body?.type === 'coupon') {
+      const couponId = body.couponId
+      const applicationIds: number[] = Array.isArray(body.applicationIds) ? body.applicationIds : []
+      if (!couponId) return json({ error: 'couponId is required' }, 400)
+      if (applicationIds.length === 0) return json({ error: 'No recipients selected' }, 400)
+
+      const { data: coupon, error: couponErr } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('id', couponId)
+        .single()
+      if (couponErr || !coupon) return json({ error: 'Coupon not found' }, 404)
+      if (!coupon.active) return json({ error: 'Coupon is inactive' }, 400)
+      if (coupon.valid_until && coupon.valid_until < new Date().toISOString().slice(0, 10)) {
+        return json({ error: 'Coupon has expired' }, 400)
+      }
+
+      const { data: members, error: membersErr } = await supabase
+        .from('applications')
+        .select('*')
+        .in('id', applicationIds)
+        .eq('status', 'APPROVED')
+      if (membersErr) return json({ error: membersErr.message }, 500)
+
+      const results: Array<{ id: number; email: string; sent: boolean; error: string | null }> = []
+      for (const member of members ?? []) {
+        const { subject: subj, html: emailHtml } = buildCouponEmail(member, coupon)
+        let sent = false
+        let errMsg: string | null = null
+        if (GMAIL_APP_PASSWORD) {
+          try {
+            await smtpSend(member.email, subj, emailHtml)
+            sent = true
+          } catch (e) {
+            errMsg = `SMTP error: ${String(e)}`
+          }
+        } else {
+          errMsg = 'GMAIL_APP_PASSWORD not configured - email not sent'
+        }
+        await supabase.from('mail_log').insert({
+          application_id: member.id,
+          to_email: member.email,
+          subject: subj,
+          body: emailHtml,
+          membership_id: member.membership_id ?? null,
+          sent,
+          error: errMsg,
+        })
+        results.push({ id: member.id, email: member.email, sent, error: errMsg })
+      }
+
+      return json({ ok: true, mode: 'coupon', couponCode: coupon.code, results })
     }
 
     const applicationId = body.applicationId

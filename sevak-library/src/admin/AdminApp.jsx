@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { LibraryBig, LayoutDashboard, Users, LogOut, Loader2, Inbox } from 'lucide-react'
+import { LibraryBig, LayoutDashboard, Users, Tag, LogOut, Loader2, Inbox } from 'lucide-react'
 import { Routes, Route, NavLink, useNavigate, useLocation, useParams } from 'react-router-dom'
 import '../admin-dashboard.css'
 import { supabase } from '../supabaseClient.js'
@@ -8,6 +8,7 @@ import { ToastProvider } from './toast.jsx'
 import Dashboard from './Dashboard.jsx'
 import Applications from './Applications.jsx'
 import ApplicationDetail from './ApplicationDetail.jsx'
+import Coupons from './Coupons.jsx'
 import { useApps } from './useApps.js'
 
 function LoadingScreen() {
@@ -77,7 +78,8 @@ export default function AdminApp() {
 
   const nav = [
     { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={19} />, end: true },
-    { to: '/admin/applications', label: 'Applications', icon: <Users size={19} /> }
+    { to: '/admin/applications', label: 'Applications', icon: <Users size={19} /> },
+    { to: '/admin/coupons', label: 'Coupons', icon: <Tag size={19} /> }
   ]
 
   const signOut = async () => {
@@ -134,6 +136,7 @@ export default function AdminApp() {
                 <Route index element={<Dashboard rows={rows || []} onOpen={onOpen} />} />
                 <Route path="applications" element={<Applications rows={rows || []} onOpen={onOpen} />} />
                 <Route path="applications/:id" element={<DetailRoute rows={rows || []} refresh={refresh} />} />
+                <Route path="coupons" element={<Coupons rows={rows || []} />} />
               </Routes>
             )}
           </div>

@@ -86,6 +86,50 @@ export async function deleteApplicationPhoto(path) {
   if (error) throw new Error(error.message)
 }
 
+export async function listCoupons() {
+  const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false })
+  if (error) throw new Error(error.message)
+  return data || []
+}
+
+export async function createCoupon(values) {
+  const { data, error } = await supabase.from('coupons').insert(values).select().single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function updateCoupon(id, values) {
+  const { data, error } = await supabase.from('coupons').update(values).eq('id', id).select().single()
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function deleteCoupon(id) {
+  const { error } = await supabase.from('coupons').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function sendCouponEmail(couponId, applicationIds) {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession()
+  const res = await withTimeout(
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-membership-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token}`
+      },
+      body: JSON.stringify({ type: 'coupon', couponId, applicationIds })
+    }),
+    60000
+  )
+  const j = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)
+  if (j.sent === false) throw new Error(j.error || 'Email could not be sent')
+  return j
+}
+
 export async function rejectApplication(id, reason) {
   const { data, error } = await supabase.rpc('reject_application', {
     p_id: id,

@@ -26,8 +26,10 @@ The pending migrations are `supabase/migrations/0004_resume_payment.sql`
 (extends `get_application_by_ref` to return payment fields),
 `supabase/migrations/0007_edit_application.sql` (adds the staff
 `update_application` RPC for editing applicant details in the admin panel),
-and `supabase/migrations/0008_edit_application_photos.sql` (adds staff photo
-replacement for applications).
+`supabase/migrations/0008_edit_application_photos.sql` (adds staff photo
+replacement for applications),
+and `supabase/migrations/0009_coupons.sql` (adds the `coupons` table with
+staff-only CRUD policies for the admin coupon section).
 
 Apply them in the **Supabase Dashboard → SQL Editor**:
 1. Open https://supabase.com/dashboard/project/wubjaxhrduzeidzqutoq
@@ -79,7 +81,9 @@ supabase functions update send-membership-email --verify-jwt false
 4. Complete payment (enter a test txn id) → status becomes PAYMENT_SUBMITTED.
 5. Admin: sign in at `#/admin/login`, verify → approve → applicant gets the
    membership ID email from library.sevak@gmail.com.
-6. If an email is missing, check Edge Functions → `send-membership-email` → Logs
+6. Admin: Coupons → create a coupon, select members, send → each selected
+   member receives the coupon email from library.sevak@gmail.com.
+7. If an email is missing, check Edge Functions → `send-membership-email` → Logs
    (it logs SMTP errors and writes every attempt to the `mail_log` table).
 
 ## 5. Trouble-shooting
