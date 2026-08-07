@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
-  X, ShieldCheck, BadgeCheck, Mail, MessageCircle, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass
+  X, ShieldCheck, BadgeCheck, Mail, MessageCircle, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass, FileText
 } from 'lucide-react'
 import { getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail, sendPaymentReminder } from '../api.js'
+import { pdfMemberDoc } from './MembershipFormDoc.jsx'
 import { supabase } from '../supabaseClient.js'
 import { statusLabel } from './meta.js'
 import { formatINR, formatDate } from '../formUtils.js'
@@ -68,6 +69,17 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
       toast('Payment reminder email sent.')
     } catch (e) {
       toast(e.message, 'error')
+    }
+    setBusy('')
+  }
+
+  const printPdf = async () => {
+    setBusy('pdf')
+    try {
+      await pdfMemberDoc([row], [files.passport])
+      toast('Membership registration PDF downloaded.')
+    } catch (e) {
+      toast(`Could not generate PDF: ${e.message}`, 'error')
     }
     setBusy('')
   }
@@ -228,6 +240,9 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
           )}
           {row.status === 'APPROVED' && (
             <>
+              <button className="btn-act pdf" onClick={printPdf} disabled={!!busy}>
+                {busy === 'pdf' ? <Loader2 size={15} className="spin" /> : <FileText size={15} />} Registration PDF
+              </button>
               <a className="btn-act whatsapp" href={waUrl} target="_blank" rel="noreferrer">
                 <MessageCircle size={15} /> WhatsApp
               </a>

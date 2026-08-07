@@ -59,6 +59,11 @@ export async function getFileUrl(path) {
   return error ? null : data.signedUrl
 }
 
+export async function resolvePhotoUrls(rows) {
+  const results = await Promise.all(rows.map((r) => getFileUrl(r.passport_photo)))
+  return results.map((u) => u ?? null)
+}
+
 export async function rejectApplication(id, reason) {
   const { data, error } = await supabase.rpc('reject_application', {
     p_id: id,

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { Search, Download, ChevronLeft, ChevronRight, ArrowUpDown, Inbox } from 'lucide-react'
+import { Search, Download, ChevronLeft, ChevronRight, ArrowUpDown, Inbox, FileText, Loader2 } from 'lucide-react'
 import { STATUS_META, STATUS_ORDER, statusLabel } from './meta.js'
-import { exportApplicationsCsv } from '../api.js'
+import { exportApplicationsCsv, resolvePhotoUrls } from '../api.js'
+import { pdfMemberDoc } from './MembershipFormDoc.jsx'
 import { formatINR, formatDate } from '../formUtils.js'
 import { useToast } from './toast.jsx'
 
@@ -17,6 +18,7 @@ export default function Applications({ rows, onOpen }) {
   const [sortKey, setSortKey] = useState('created_at')
   const [sortDir, setSortDir] = useState('desc')
   const [page, setPage] = useState(1)
+  const [pdfBusy, setPdfBusy] = useState(false)
   const bodyRef = useRef(null)
 
   const counts = useMemo(() => {
@@ -95,6 +97,20 @@ export default function Applications({ rows, onOpen }) {
     toast(`Exported ${filtered.length} applications to CSV.`)
   }
 
+  const printPdf = async () => {
+    const approved = filtered.filter((r) => r.status === 'APPROVED')
+    if (approved.length === 0) return
+    setPdfBusy(true)
+    try {
+      const urls = await resolvePhotoUrls(approved)
+      await pdfMemberDoc(approved, urls)
+      toast(`Downloaded ${approved.length} membership registration PDF(s).`)
+    } catch (e) {
+      toast(`Could not generate PDF: ${e.message}`, 'error')
+    }
+    setPdfBusy(false)
+  }
+
   const SortBtn = ({ label, k }) => (
     <button className="sort-btn" onClick={() => toggleSort(k)}>
       {label}
@@ -109,9 +125,14 @@ export default function Applications({ rows, onOpen }) {
           <h2>Applications</h2>
           <p className="admin-sub">{filtered.length} of {rows.length} applications</p>
         </div>
-        <button className="btn-export" onClick={exportCsv} disabled={filtered.length === 0}>
-          <Download size={15} /> Export CSV
-        </button>
+        <div className="admin-view-head-btns">
+          <button className="btn-export btn-export-pdf" onClick={printPdf} disabled={pdfBusy || filtered.filter((r) => r.status === 'APPROVED').length === 0}>
+            {pdfBusy ? <Loader2 size={15} className="spin" /> : <FileText size={15} />} Print approved PDF
+          </button>
+          <button className="btn-export" onClick={exportCsv} disabled={filtered.length === 0}>
+            <Download size={15} /> Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="app-toolbar">

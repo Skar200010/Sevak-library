@@ -764,6 +764,24 @@
   cursor: default;
 }
 
+.btn-export-pdf {
+  color: #6d28d9;
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+}
+
+.btn-export-pdf:hover:not(:disabled) {
+  border-color: #7c3aed;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.admin-view-head-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ---------- applications table ---------- */
 
 .app-table-wrap {
@@ -1198,6 +1216,12 @@
   background: #fffbeb;
 }
 
+.btn-act.pdf {
+  color: #6d28d9;
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+}
+
 .btn-act.danger {
   color: #b91c1c;
   border-color: #fecaca;
@@ -1381,4 +1405,218 @@
   .chart-wide {
     grid-column: span 1;
   }
+}
+
+/* ---------- A4 membership registration form (PDF template) ---------- */
+
+.doc-a4 {
+  width: 794px;
+  min-height: 1123px;
+  background: #fff;
+  color: #1f2937;
+  padding: 40px 44px;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  position: relative;
+  border-top: 8px solid #1a7f4b;
+}
+
+.doc-logo {
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.doc-logo img {
+  width: 64px;
+  height: 64px;
+}
+
+.doc-header {
+  text-align: center;
+  border-bottom: 2px solid #1a7f4b;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+
+.doc-header h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #126138;
+  letter-spacing: 0.5px;
+}
+
+.doc-header h2 {
+  margin: 4px 0 2px;
+  font-size: 16px;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.doc-header p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: #5f6368;
+}
+
+.doc-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.doc-photo {
+  width: 150px;
+  height: 180px;
+  border: 2px solid #374151;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f4;
+}
+
+.doc-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.doc-photo-placeholder {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.doc-ref {
+  text-align: right;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 16px;
+}
+
+.doc-ref .doc-ref-label {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.doc-ref .doc-ref-value {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #126138;
+  margin-top: 2px;
+}
+
+.doc-block {
+  margin-bottom: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.doc-block-title {
+  background: #e8f5ee;
+  color: #126138;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 7px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.doc-block-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.doc-block-cols > .doc-field:only-child {
+  grid-column: span 2;
+}
+
+.doc-field {
+  padding: 8px 12px;
+  border-right: 1px solid #eef1ef;
+  border-bottom: 1px solid #eef1ef;
+}
+
+.doc-field:nth-child(even) {
+  border-right: none;
+}
+
+.doc-field-label {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.doc-field-value {
+  display: block;
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.doc-declaration {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+
+.doc-declaration p {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.doc-sign-wrap {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.doc-sign {
+  flex: 1;
+  border-top: 1px solid #9ca3af;
+  padding-top: 6px;
+}
+
+.doc-sign + .doc-sign {
+  max-width: 220px;
+  text-align: center;
+  border-top-color: transparent;
+  border-bottom: 1px solid #9ca3af;
+  padding-top: 26px;
+}
+
+.doc-sign-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.doc-sign-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.doc-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #5f6368;
+  border-top: 2px solid #1a7f4b;
+  padding-top: 10px;
 }
