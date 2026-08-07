@@ -127,6 +127,8 @@ function Field({ field, value, onChange, error }) {
   }
 
   if (field.type === 'file') {
+    const pick = (e) => onChange(field.id, e.target.files[0] || '')
+    const fileName = value instanceof File ? value.name : ''
     return (
       <div className={`field ${error ? 'has-error' : ''}`}>
         <label className="field-label" htmlFor={field.id}>
@@ -134,15 +136,27 @@ function Field({ field, value, onChange, error }) {
           {field.required && <span className="req">*</span>}
         </label>
         {field.helpText && <p className="help-text">{field.helpText}</p>}
-        <label className="file-input">
-          <input
-            id={field.id}
-            type="file"
-            accept={field.accept ? field.accept.join(',') : undefined}
-            onChange={(e) => onChange(field.id, e.target.files[0] || '')}
-          />
-          <span>{value instanceof File ? value.name : 'Choose file'}</span>
-        </label>
+        <div className="file-actions">
+          <label className="file-input">
+            <input
+              id={`${field.id}-camera`}
+              type="file"
+              accept="image/*"
+              onChange={pick}
+            />
+            <span>Open Camera</span>
+          </label>
+          <label className="file-input">
+            <input
+              id={`${field.id}-upload`}
+              type="file"
+              accept={field.accept ? field.accept.join(',') : undefined}
+              onChange={pick}
+            />
+            <span>Upload Photo</span>
+          </label>
+        </div>
+        {fileName && <p className="file-name">{fileName}</p>}
         {error && <p className="error-text">{error}</p>}
       </div>
     )

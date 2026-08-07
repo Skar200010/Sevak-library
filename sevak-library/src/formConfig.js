@@ -34,8 +34,9 @@ export const SECTIONS = [
         label: 'Membership ID',
         type: 'text',
         required: false,
-        placeholder: 'Leave blank if not yet assigned',
-        helpText: 'Leave blank if not yet assigned. The library will issue your Membership ID.'
+        readOnly: true,
+        placeholder: 'Issued by library',
+        helpText: 'The library will issue your Membership ID.'
       },
       {
         id: 'applicationDate',
@@ -43,6 +44,14 @@ export const SECTIONS = [
         type: 'date',
         required: true,
         autoToday: true
+      },
+      {
+        id: 'membershipType',
+        label: 'Membership Plan',
+        type: 'radio',
+        required: true,
+        options: ['Daily', 'Half Monthly', 'Monthly', 'Quarterly', 'Half-Yearly', 'Annual'],
+        helpText: 'Choose your plan. Your End Date is calculated automatically from your Start Date and plan.'
       },
       {
         id: 'startDate',
@@ -245,13 +254,6 @@ export const SECTIONS = [
     id: 'library_membership',
     title: 'Section 6 - Library Membership',
     fields: [
-      {
-        id: 'membershipType',
-        label: 'Membership Type',
-        type: 'radio',
-        required: true,
-        options: ['Daily', 'Half Monthly', 'Monthly', 'Quarterly', 'Half-Yearly', 'Annual']
-      },
       {
         id: 'membershipFee',
         label: 'Membership Fee',
