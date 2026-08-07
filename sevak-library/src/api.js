@@ -92,6 +92,7 @@ async function callEmailFunction(applicationId, type) {
   })
   const j = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)
+  if (j.sent === false) throw new Error(j.error || 'Email could not be sent')
   return j
 }
 
@@ -107,6 +108,7 @@ export async function sendPaymentReminder(applicationId) {
   })
   const j = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)
+  if (j.sent === false) throw new Error(j.error || 'Email could not be sent')
   return j
 }
 

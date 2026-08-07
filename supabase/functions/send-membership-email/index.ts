@@ -6,6 +6,9 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const GMAIL_USER = Deno.env.get('GMAIL_USER') ?? 'being.sevak@gmail.com'
 const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD') ?? ''
+const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY') ?? ''
+const BREVO_SENDER_EMAIL = Deno.env.get('BREVO_SENDER_EMAIL') ?? GMAIL_USER
+const BREVO_SENDER_NAME = Deno.env.get('BREVO_SENDER_NAME') ?? 'Sevak Library'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://sevak-library.vercel.app'
 
 const json = (payload: unknown, status = 200) =>
@@ -18,6 +21,24 @@ const json = (payload: unknown, status = 200) =>
       'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     },
   })
+
+async function sendViaBrevo(to: string, subject: string, html: string) {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  })
+  if (!res.ok) throw new Error(`Brevo HTTP ${res.status}: ${await res.text()}`)
+  return true
+}
 
 const cardRow = (k: string, v: string) =>
   `<tr><td style="padding:8px;border:1px solid #dadce0">${k}</td><td style="padding:8px;border:1px solid #dadce0"><strong>${v}</strong></td></tr>`
@@ -109,8 +130,10 @@ serve(async (req) => {
 
     let sent = false
     let errMsg: string | null = null
+    let provider: string | null = null
 
     if (GMAIL_APP_PASSWORD) {
+      provider = 'gmail'
       const client = new SmtpClient()
       try {
         await client.connectTLS({
@@ -136,9 +159,24 @@ serve(async (req) => {
           // ignore close errors
         }
       }
-    } else {
-      errMsg = 'GMAIL_APP_PASSWORD not configured - email not sent'
     }
+
+    if (!sent && BREVO_API_KEY) {
+      provider = 'brevo'
+      try {
+        await sendViaBrevo(app.email, subject, html)
+        sent = true
+        errMsg = null
+      } catch (e) {
+        errMsg = `Brevo error: ${String(e)}`
+      }
+    }
+
+    if (!sent && !provider) {
+      errMsg = 'No email provider configured (set GMAIL_APP_PASSWORD or BREVO_API_KEY) - email not sent'
+    }
+
+    console.log(`[send-membership-email] provider=${provider} sent=${sent} to=${app.email} error=${errMsg}`)
 
     const { error: logErr } = await supabase.from('mail_log').insert({
       application_id: app.id,
@@ -154,6 +192,7 @@ serve(async (req) => {
       ok: true,
       type,
       sent,
+      provider,
       error: errMsg,
       logError: logErr?.message ?? null,
       membershipId: type === 'membership' ? app.membership_id : null,
