@@ -82,18 +82,33 @@ async function callEmailFunction(applicationId, type) {
   const {
     data: { session }
   } = await supabase.auth.getSession()
-  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-membership-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.access_token}`
-    },
-    body: JSON.stringify({ applicationId, type })
-  })
+  const res = await withTimeout(
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-membership-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token}`
+      },
+      body: JSON.stringify({ applicationId, type })
+    }),
+    25000
+  )
   const j = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)
   if (j.sent === false) throw new Error(j.error || 'Email could not be sent')
   return j
+}
+
+async function withTimeout(promise, ms) {
+  let timer
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Email service timed out. Try again.')), ms)
+  })
+  try {
+    return await Promise.race([promise, timeout])
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export async function resendMembershipEmail(applicationId) {
@@ -101,11 +116,14 @@ export async function resendMembershipEmail(applicationId) {
 }
 
 export async function sendPaymentReminder(applicationId) {
-  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-membership-email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ applicationId, type: 'payment' })
-  })
+  const res = await withTimeout(
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-membership-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applicationId, type: 'payment' })
+    }),
+    25000
+  )
   const j = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(j.error || `Request failed (${res.status})`)
   if (j.sent === false) throw new Error(j.error || 'Email could not be sent')

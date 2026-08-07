@@ -52,15 +52,13 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
       setBusy('')
       return
     }
-    try {
-      await resendMembershipEmail(row.id)
-      toast(`Membership ${data.membership_id} issued. Email sent.`)
-    } catch (e) {
-      toast(`Membership ${data.membership_id} issued, but email failed: ${e.message}`, 'error')
-    }
+    setBusy('')
+    toast(`Membership ${data.membership_id} issued.`)
     refresh()
     onClose()
-    setBusy('')
+    resendMembershipEmail(row.id)
+      .then(() => toast('Membership email sent.'))
+      .catch((e) => toast(`Membership issued, but email failed: ${e.message}`, 'error'))
   }
 
   const sendReminder = async () => {
