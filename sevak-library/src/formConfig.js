@@ -10,7 +10,7 @@ export const FORM_META = {
 }
 
 export const MEMBERSHIP_PRICES = {
-  Daily: '2',
+  Daily: '250',
   'Half Monthly': '500',
   Monthly: '1650',
   Quarterly: '4950',
@@ -34,8 +34,9 @@ export const SECTIONS = [
         label: 'Membership ID',
         type: 'text',
         required: false,
-        placeholder: 'Leave blank if not yet assigned',
-        helpText: 'Leave blank if not yet assigned. The library will issue your Membership ID.'
+        readOnly: true,
+        placeholder: 'Issued by library',
+        helpText: 'The library will issue your Membership ID.'
       },
       {
         id: 'applicationDate',
@@ -43,6 +44,14 @@ export const SECTIONS = [
         type: 'date',
         required: true,
         autoToday: true
+      },
+      {
+        id: 'membershipType',
+        label: 'Membership Plan',
+        type: 'radio',
+        required: true,
+        options: ['Daily', 'Half Monthly', 'Monthly', 'Quarterly', 'Half-Yearly', 'Annual'],
+        helpText: 'Choose your plan. Your End Date is calculated automatically from your Start Date and plan.'
       },
       {
         id: 'startDate',
@@ -211,15 +220,6 @@ export const SECTIONS = [
         helpText: 'Select the identity document you are uploading.'
       },
       {
-        id: 'identityNumber',
-        label: 'Identity Document Number',
-        type: 'text',
-        required: true,
-        custom: 'identityNumber',
-        placeholder: 'Enter the document number',
-        helpText: 'Enter the number exactly as it appears on the document.'
-      },
-      {
         id: 'identityProofPhoto',
         label: 'Upload Identity Proof Photo',
         type: 'file',
@@ -245,13 +245,6 @@ export const SECTIONS = [
     id: 'library_membership',
     title: 'Section 6 - Library Membership',
     fields: [
-      {
-        id: 'membershipType',
-        label: 'Membership Type',
-        type: 'radio',
-        required: true,
-        options: ['Daily', 'Half Monthly', 'Monthly', 'Quarterly', 'Half-Yearly', 'Annual']
-      },
       {
         id: 'membershipFee',
         label: 'Membership Fee',

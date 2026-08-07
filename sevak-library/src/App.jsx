@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FORM_META, SECTIONS, MEMBERSHIP_PRICES } from './formConfig.js'
-import { validateField, getIdentityMaxLength, validateIdentityDocument } from './validate.js'
+import { validateField, validateIdentityDocument } from './validate.js'
 import { buildInitialValues, computeEndDate } from './formUtils.js'
 import { submitApplication, sendPaymentReminder } from './api.js'
 import CheckoutPage from './CheckoutPage.jsx'
@@ -127,6 +127,8 @@ function Field({ field, value, onChange, error }) {
   }
 
   if (field.type === 'file') {
+    const pick = (e) => onChange(field.id, e.target.files[0] || '')
+    const fileName = value instanceof File ? value.name : ''
     return (
       <div className={`field ${error ? 'has-error' : ''}`}>
         <label className="field-label" htmlFor={field.id}>
@@ -134,15 +136,27 @@ function Field({ field, value, onChange, error }) {
           {field.required && <span className="req">*</span>}
         </label>
         {field.helpText && <p className="help-text">{field.helpText}</p>}
-        <label className="file-input">
-          <input
-            id={field.id}
-            type="file"
-            accept={field.accept ? field.accept.join(',') : undefined}
-            onChange={(e) => onChange(field.id, e.target.files[0] || '')}
-          />
-          <span>{value instanceof File ? value.name : 'Choose file'}</span>
-        </label>
+        <div className="file-actions">
+          <label className="file-input">
+            <input
+              id={`${field.id}-camera`}
+              type="file"
+              accept="image/*"
+              onChange={pick}
+            />
+            <span>Open Camera</span>
+          </label>
+          <label className="file-input">
+            <input
+              id={`${field.id}-upload`}
+              type="file"
+              accept={field.accept ? field.accept.join(',') : undefined}
+              onChange={pick}
+            />
+            <span>Upload Photo</span>
+          </label>
+        </div>
+        {fileName && <p className="file-name">{fileName}</p>}
         {error && <p className="error-text">{error}</p>}
       </div>
     )
@@ -191,21 +205,15 @@ function AboutLibrary({ section }) {
 
 function SectionBody({ section, values, onChange, errors }) {
   if (section.type === 'info') return <AboutLibrary section={section} />
-  return section.fields.map((f) => {
-    const field =
-      f.custom === 'identityNumber'
-        ? { ...f, maxLength: getIdentityMaxLength(values.identityProofType) }
-        : f
-    return (
-      <Field
-        key={field.id}
-        field={field}
-        value={values[field.id]}
-        onChange={onChange}
-        error={errors[field.id]}
-      />
-    )
-  })
+  return section.fields.map((f) => (
+    <Field
+      key={f.id}
+      field={f}
+      value={values[f.id]}
+      onChange={onChange}
+      error={errors[f.id]}
+    />
+  ))
 }
 
 async function validateSection(section, values) {

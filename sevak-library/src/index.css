@@ -217,6 +217,22 @@ textarea {
   text-align: center;
 }
 
+.file-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.file-actions .file-input {
+  flex: 1;
+}
+
+.file-name {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--green-dark);
+}
+
 .about-card {
   background: var(--green-light);
   border: 1px solid var(--border);
