@@ -10,7 +10,7 @@ export const FORM_META = {
 }
 
 export const MEMBERSHIP_PRICES = {
-  Daily: '2',
+  Daily: '250',
   'Half Monthly': '500',
   Monthly: '1650',
   Quarterly: '4950',
@@ -218,15 +218,6 @@ export const SECTIONS = [
         required: true,
         options: ['Aadhaar Card', 'PAN Card', 'Driving Licence', 'Passport', 'Student ID', 'Other'],
         helpText: 'Select the identity document you are uploading.'
-      },
-      {
-        id: 'identityNumber',
-        label: 'Identity Document Number',
-        type: 'text',
-        required: true,
-        custom: 'identityNumber',
-        placeholder: 'Enter the document number',
-        helpText: 'Enter the number exactly as it appears on the document.'
       },
       {
         id: 'identityProofPhoto',

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FORM_META, SECTIONS, MEMBERSHIP_PRICES } from './formConfig.js'
-import { validateField, getIdentityMaxLength, validateIdentityDocument } from './validate.js'
+import { validateField, validateIdentityDocument } from './validate.js'
 import { buildInitialValues, computeEndDate } from './formUtils.js'
 import { submitApplication, sendPaymentReminder } from './api.js'
 import CheckoutPage from './CheckoutPage.jsx'
@@ -205,21 +205,15 @@ function AboutLibrary({ section }) {
 
 function SectionBody({ section, values, onChange, errors }) {
   if (section.type === 'info') return <AboutLibrary section={section} />
-  return section.fields.map((f) => {
-    const field =
-      f.custom === 'identityNumber'
-        ? { ...f, maxLength: getIdentityMaxLength(values.identityProofType) }
-        : f
-    return (
-      <Field
-        key={field.id}
-        field={field}
-        value={values[field.id]}
-        onChange={onChange}
-        error={errors[field.id]}
-      />
-    )
-  })
+  return section.fields.map((f) => (
+    <Field
+      key={f.id}
+      field={f}
+      value={values[f.id]}
+      onChange={onChange}
+      error={errors[f.id]}
+    />
+  ))
 }
 
 async function validateSection(section, values) {

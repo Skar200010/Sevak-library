@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  X, ShieldCheck, BadgeCheck, Mail, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass
+  X, ShieldCheck, BadgeCheck, Mail, MessageCircle, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass
 } from 'lucide-react'
 import { getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail, sendPaymentReminder } from '../api.js'
 import { supabase } from '../supabaseClient.js'
@@ -85,6 +85,29 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     setBusy('')
   }
 
+  const m = row.mobile ? row.mobile.replace(/\D/g, '') : ''
+  const waNumber = m.length === 10 ? `91${m}` : m
+  const messageText = [
+    `Hello ${row.full_name},`,
+    '',
+    `Your Sevak Library membership has been approved.`,
+    `Membership ID: ${row.membership_id || '—'}`,
+    `Plan: ${row.membership_type} · ${formatINR(row.membership_fee)}`,
+    row.start_date && row.end_date
+      ? `Period: ${formatDate(row.start_date)} → ${formatDate(row.end_date)}`
+      : '',
+    '',
+    'Thank you for becoming a part of our library.',
+    'Sevak Library | Being Sevak Charitable Trust'
+  ]
+    .filter(Boolean)
+    .join('\n')
+  const encoded = encodeURIComponent(messageText)
+  const waUrl = waNumber ? `https://wa.me/${waNumber}?text=${encoded}` : ''
+  const mailUrl = `mailto:${row.email}?subject=${encodeURIComponent(
+    `Sevak Library Membership - ${row.membership_id || row.ref}`
+  )}&body=${encoded}`
+
   const doReject = async () => {
     if (!reason.trim()) {
       toast('Please enter a reason for rejection.', 'error')
@@ -128,7 +151,7 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     ['Plan', row.membership_type],
     ['Fee', formatINR(row.membership_fee)],
     ['Start → End', row.start_date && row.end_date ? `${formatDate(row.start_date)} → ${formatDate(row.end_date)}` : '—'],
-    ['Identity proof', row.identity_proof_type ? `${row.identity_proof_type} · ${row.identity_number}` : '—'],
+    ['Identity proof', row.identity_proof_type ? `${row.identity_proof_type}${row.identity_number ? ` · ${row.identity_number}` : ''}` : '—'],
     ['Payment ref', row.payment_ref],
     ['Transaction / UTR', row.transaction_id || '—'],
     ['Membership ID', row.membership_id || '—'],
@@ -217,9 +240,17 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
             </button>
           )}
           {row.status === 'APPROVED' && (
-            <button className="btn-act resend" onClick={resend} disabled={!!busy}>
-              {busy === 'resend' ? <Loader2 size={15} className="spin" /> : <Mail size={15} />} Resend email
-            </button>
+            <>
+              <a className="btn-act whatsapp" href={waUrl} target="_blank" rel="noreferrer">
+                <MessageCircle size={15} /> WhatsApp
+              </a>
+              <a className="btn-act email" href={mailUrl}>
+                <Mail size={15} /> Email
+              </a>
+              <button className="btn-act resend" onClick={resend} disabled={!!busy}>
+                {busy === 'resend' ? <Loader2 size={15} className="spin" /> : <Mail size={15} />} Resend email
+              </button>
+            </>
           )}
           {row.status === 'SUBMITTED' && (
             <button className="btn-act remind" onClick={sendReminder} disabled={!!busy}>
