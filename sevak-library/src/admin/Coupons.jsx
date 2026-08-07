@@ -292,7 +292,7 @@ export default function Coupons({ rows }) {
       </div>
 
       <div className="stat-grid">
-        <StatCard icon={<Tag size={20} />} label="Total coupons" value={stats.total} color="#1a7f4b" delay={0} />
+        <StatCard icon={<Tag size={20} />} label="Total coupons" value={stats.total} color="#0ea5e9" delay={0} />
         <StatCard icon={<CheckCircle2 size={20} />} label="Active" value={stats.active} color="#22c55e" delay={0.06} />
         <StatCard icon={<Users size={20} />} label="Expiring in 7 days" value={stats.expiring} color="#f59e0b" delay={0.12} />
         <StatCard icon={<Send size={20} />} label="Redemptions" value={stats.redemptions} color="#8b5cf6" delay={0.18} />

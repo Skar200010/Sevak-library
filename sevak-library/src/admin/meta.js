@@ -8,12 +8,12 @@ export const STATUS_META = {
 
 export const STATUS_ORDER = ['SUBMITTED', 'PAYMENT_SUBMITTED', 'VERIFIED', 'APPROVED', 'REJECTED']
 
-export const CHART_COLORS = ['#1a7f4b', '#22c55e', '#3b82f6', '#f59e0b', '#06b6d4', '#ef4444']
+export const CHART_COLORS = ['#0ea5e9', '#22c55e', '#3b82f6', '#f59e0b', '#06b6d4', '#ef4444']
 
 export const PLAN_COLORS = {
   Daily: '#f59e0b',
   'Half Monthly': '#3b82f6',
-  Monthly: '#1a7f4b',
+  Monthly: '#0ea5e9',
   Quarterly: '#06b6d4',
   'Half-Yearly': '#8b5cf6',
   Annual: '#ef4444'

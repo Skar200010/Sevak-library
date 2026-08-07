@@ -106,7 +106,7 @@ export default function Dashboard({ rows, onOpen }) {
       </div>
 
       <div className="stat-grid">
-        <StatCard icon={<Users size={20} />} label="Total applications" value={stats.total} color="#1a7f4b" delay={0} />
+        <StatCard icon={<Users size={20} />} label="Total applications" value={stats.total} color="#0ea5e9" delay={0} />
         <StatCard icon={<Clock size={20} />} label="Payment pending" value={stats.pending} color="#f59e0b" delay={0.06} />
         <StatCard icon={<ShieldCheck size={20} />} label="Awaiting verification" value={stats.awaiting} color="#3b82f6" delay={0.12} />
         <StatCard icon={<BadgeCheck size={20} />} label="Approved members" value={stats.approved} color="#22c55e" delay={0.18} />
@@ -120,15 +120,15 @@ export default function Dashboard({ rows, onOpen }) {
             <AreaChart data={daily} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
               <defs>
                 <linearGradient id="appGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#1a7f4b" stopOpacity={0.28} />
-                  <stop offset="100%" stopColor="#1a7f4b" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#5f6368' }} tickLine={false} axisLine={false} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#5f6368' }} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Area type="monotone" dataKey="count" name="Applications" stroke="#1a7f4b" strokeWidth={2} fill="url(#appGrad)" />
+              <Area type="monotone" dataKey="count" name="Applications" stroke="#0ea5e9" strokeWidth={2} fill="url(#appGrad)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -148,7 +148,7 @@ export default function Dashboard({ rows, onOpen }) {
           <div className="chart-legend">
             {plans.map((p) => (
               <span key={p.name} className="legend-item">
-                <i style={{ background: PLAN_COLORS[p.name] || '#1a7f4b' }} />
+                <i style={{ background: PLAN_COLORS[p.name] || '#0ea5e9' }} />
                 {p.name}
               </span>
             ))}

@@ -5,14 +5,14 @@
 }
 
 :root {
-  --green: #1a7f4b;
-  --green-dark: #126138;
-  --green-light: #e8f5ee;
+  --green: #0ea5e9;
+  --green-dark: #0369a1;
+  --green-light: #e0f2fe;
   --ink: #202124;
   --muted: #5f6368;
   --border: #dadce0;
   --danger: #d93025;
-  --bg: #f0f4f1;
+  --bg: #f0f7fc;
   --card: #ffffff;
 }
 
@@ -44,8 +44,8 @@ body {
   align-items: center;
   justify-content: center;
   background: #fff;
-  border: 1px solid rgba(26, 127, 75, 0.15);
-  box-shadow: 0 8px 22px rgba(18, 97, 56, 0.18);
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  box-shadow: 0 8px 22px rgba(3, 105, 161, 0.18);
 }
 
 .form-header-logo img {
@@ -171,7 +171,7 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 2px rgba(26, 127, 75, 0.18);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.18);
 }
 
 textarea {
@@ -471,7 +471,7 @@ textarea {
 /* ------------------------------ misc form ------------------------------ */
 
 input.readonly {
-  background: #f0f4f1;
+  background: #f0f7fc;
   color: var(--muted);
   cursor: not-allowed;
 }
