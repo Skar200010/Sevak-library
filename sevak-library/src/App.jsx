@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FORM_META, SECTIONS, MEMBERSHIP_PRICES } from './formConfig.js'
 import { validateField, validateIdentityDocument } from './validate.js'
@@ -127,39 +127,8 @@ function Field({ field, value, onChange, error }) {
   }
 
   if (field.type === 'file') {
-    const pick = (e) => onChange(field.id, e.target.files[0] || '')
-    const fileName = value instanceof File ? value.name : ''
     return (
-      <div className={`field ${error ? 'has-error' : ''}`}>
-        <label className="field-label" htmlFor={field.id}>
-          {field.label}
-          {field.required && <span className="req">*</span>}
-        </label>
-        {field.helpText && <p className="help-text">{field.helpText}</p>}
-        <div className="file-actions">
-          <label className="file-input">
-            <input
-              id={`${field.id}-camera`}
-              type="file"
-              accept="image/*"
-              capture="user"
-              onChange={pick}
-            />
-            <span>Open Camera</span>
-          </label>
-          <label className="file-input">
-            <input
-              id={`${field.id}-upload`}
-              type="file"
-              accept={field.accept ? field.accept.join(',') : undefined}
-              onChange={pick}
-            />
-            <span>Upload Photo</span>
-          </label>
-        </div>
-        {fileName && <p className="file-name">{fileName}</p>}
-        {error && <p className="error-text">{error}</p>}
-      </div>
+      <PhotoField field={field} value={value} onChange={onChange} error={error} />
     )
   }
 
@@ -181,6 +150,108 @@ function Field({ field, value, onChange, error }) {
         placeholder={field.placeholder}
         maxLength={field.maxLength || (field.type === 'tel' ? 10 : undefined)}
       />
+      {error && <p className="error-text">{error}</p>}
+    </div>
+  )
+}
+
+function PhotoField({ field, value, onChange, error }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const cameraRef = useRef(null)
+  const galleryRef = useRef(null)
+
+  const previewUrl = useMemo(() => {
+    if (value instanceof File) return URL.createObjectURL(value)
+    return ''
+  }, [value])
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
+
+  const pick = (e) => {
+    onChange(field.id, e.target.files[0] || '')
+    e.target.value = ''
+    setMenuOpen(false)
+  }
+
+  const hasPreview = !!previewUrl
+
+  return (
+    <div className={`field ${error ? 'has-error' : ''}`}>
+      <label className="field-label">
+        {field.label}
+        {field.required && <span className="req">*</span>}
+      </label>
+      {field.helpText && <p className="help-text">{field.helpText}</p>}
+
+      <div className="photo-field">
+        <button
+          type="button"
+          className={`photo-drop ${hasPreview ? 'has-preview' : ''}`}
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label={hasPreview ? 'Change photo' : 'Add photo'}
+        >
+          {hasPreview ? (
+            <img src={previewUrl} alt={`${field.label} preview`} />
+          ) : (
+            <>
+              <span className="photo-drop-icon">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </span>
+              <span className="photo-drop-title">Add {field.label.toLowerCase()}</span>
+              <span className="photo-drop-hint">Click to choose camera or gallery</span>
+            </>
+          )}
+        </button>
+
+        {hasPreview && (
+          <div className="photo-actions">
+            <button type="button" className="photo-act" onClick={() => setMenuOpen((o) => !o)}>
+              Change
+            </button>
+            <button
+              type="button"
+              className="photo-act photo-act-remove"
+              onClick={() => {
+                onChange(field.id, '')
+                setMenuOpen(false)
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        {menuOpen && (
+          <div className="photo-menu">
+            <button type="button" className="photo-menu-btn" onClick={() => cameraRef.current?.click()}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              Take Photo
+            </button>
+            <button type="button" className="photo-menu-btn" onClick={() => galleryRef.current?.click()}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="m21 15-5-5L5 21" />
+              </svg>
+              Upload from Gallery
+            </button>
+          </div>
+        )}
+
+        <input ref={cameraRef} type="file" accept="image/*" capture="user" onChange={pick} className="photo-hidden" />
+        <input ref={galleryRef} type="file" accept={field.accept ? field.accept.join(',') : 'image/*'} onChange={pick} className="photo-hidden" />
+      </div>
+
       {error && <p className="error-text">{error}</p>}
     </div>
   )

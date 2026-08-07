@@ -217,40 +217,128 @@ textarea {
   padding: 12px;
 }
 
-.file-input {
-  display: block;
-  cursor: pointer;
+.photo-field {
+  position: relative;
+  margin-top: 6px;
 }
 
-.file-input input {
-  display: none;
-}
-
-.file-input span {
-  display: block;
-  padding: 10px 12px;
-  border: 1px dashed var(--green);
-  border-radius: 6px;
-  color: var(--green-dark);
+.photo-drop {
+  width: 100%;
+  min-height: 180px;
+  border: 2px dashed var(--green);
+  border-radius: 12px;
   background: var(--green-light);
-  font-size: 14px;
-  text-align: center;
-}
-
-.file-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 6px;
-}
-
-.file-actions .file-input {
-  flex: 1;
-}
-
-.file-name {
-  margin-top: 6px;
-  font-size: 13px;
   color: var(--green-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.photo-drop:hover {
+  background: #d6eefc;
+  border-color: var(--green-dark);
+}
+
+.photo-drop.has-preview {
+  border-style: solid;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.photo-drop.has-preview img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  display: block;
+}
+
+.photo-drop-icon {
+  color: var(--green);
+  margin-bottom: 2px;
+}
+
+.photo-drop-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.photo-drop-hint {
+  font-size: 12.5px;
+  opacity: 0.75;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.photo-act {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.photo-act-remove {
+  border-color: var(--danger);
+  background: #fdecea;
+  color: var(--danger);
+}
+
+.photo-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+}
+
+.photo-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: #fff;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.photo-menu-btn + .photo-menu-btn {
+  border-top: 1px solid var(--border);
+}
+
+.photo-menu-btn:hover {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.photo-hidden {
+  display: none;
 }
 
 .about-card {
