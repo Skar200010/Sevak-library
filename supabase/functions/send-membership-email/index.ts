@@ -4,7 +4,7 @@ import { SmtpClient } from 'https://deno.land/x/smtp@v0.7.0/mod.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-const GMAIL_USER = Deno.env.get('GMAIL_USER') ?? 'being.sevak@gmail.com'
+const GMAIL_USER = Deno.env.get('GMAIL_USER') ?? 'library.sevak@gmail.com'
 const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD') ?? ''
 const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY') ?? ''
 const BREVO_SENDER_EMAIL = Deno.env.get('BREVO_SENDER_EMAIL') ?? GMAIL_USER
