@@ -1,6 +1,5 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import nodemailer from 'npm:nodemailer@^6'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -18,6 +17,94 @@ const json = (payload: unknown, status = 200) =>
       'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     },
   })
+
+// ---------- Minimal pure-Deno SMTP client (no external deps) ----------
+// Connects with implicit TLS on port 465 and uses AUTH PLAIN to send.
+
+async function smtpSend(to: string, subject: string, html: string): Promise<void> {
+  const conn = await Deno.connectTls({ hostname: 'smtp.gmail.com', port: 465 })
+  const encoder = new TextEncoder()
+  const decoder = new TextDecoder()
+
+  let buffer = ''
+  const readLine = async (): Promise<string> => {
+    while (!buffer.includes('\n')) {
+      const chunk = new Uint8Array(1024)
+      const n = await conn.read(chunk)
+      if (n === null) throw new Error('SMTP connection closed while reading')
+      buffer += decoder.decode(chunk.subarray(0, n))
+    }
+    const idx = buffer.indexOf('\n')
+    const line = buffer.slice(0, idx).trim()
+    buffer = buffer.slice(idx + 1)
+    return line
+  }
+
+  const write = async (line: string) => {
+    await conn.write(encoder.encode(line + '\r\n'))
+  }
+
+  const expect = async (code: string): Promise<string> => {
+    const line = await readLine()
+    if (!line.startsWith(code)) throw new Error(`SMTP expected ${code}, got: ${line}`)
+    // Drain multiline responses (e.g. EHLO ends with 250- ...)
+    if (line.length > 3 && line[3] === '-') {
+      while ((await readLine())[3] === '-') { /* keep draining */ }
+    }
+    return line
+  }
+
+  const b64 = (s: string) => bin2base64(encoder.encode(s))
+
+  try {
+    await expect('220') // banner
+    await write(`EHLO ${GMAIL_USER}`)
+    await expect('250')
+    // Gmail on implicit TLS (465) accepts AUTH PLAIN directly, no STARTTLS needed.
+    await write(`AUTH PLAIN ${b64(`\u0000${GMAIL_USER}\u0000${GMAIL_APP_PASSWORD}`)}`)
+    await expect('235')
+    await write(`MAIL FROM:<${GMAIL_USER}>`)
+    await expect('250')
+    await write(`RCPT TO:<${to}>`)
+    await expect('250')
+    await write('DATA')
+    await expect('354')
+
+    const escapedHtml = html.replace(/^\./gm, '..') // dot-stuffing
+    const message = `From: Sevak Library <${GMAIL_USER}>\r\n` +
+      `To: <${to}>\r\n` +
+      `Subject: ${subject}\r\n` +
+      `MIME-Version: 1.0\r\n` +
+      `Content-Type: text/html; charset=UTF-8\r\n` +
+      `Content-Transfer-Encoding: 8bit\r\n` +
+      `\r\n` +
+      `${escapedHtml}`
+
+    await conn.write(encoder.encode(message.replace(/\r?\n/g, '\r\n') + '\r\n.\r\n'))
+    await expect('250')
+    await write('QUIT')
+  } finally {
+    try { conn.close() } catch { /* ignore */ }
+  }
+}
+
+// Simple base64 encoder without relying on global btoa over binary.
+function bin2base64(bytes: Uint8Array): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  let out = ''
+  for (let i = 0; i < bytes.length; i += 3) {
+    const b1 = bytes[i]
+    const b2 = i + 1 < bytes.length ? bytes[i + 1] : 0
+    const b3 = i + 2 < bytes.length ? bytes[i + 2] : 0
+    out += chars[b1 >> 2]
+    out += chars[((b1 & 3) << 4) | (b2 >> 4)]
+    out += i + 1 < bytes.length ? chars[((b2 & 15) << 2) | (b3 >> 6)] : '='
+    out += i + 2 < bytes.length ? chars[b3 & 63] : '='
+  }
+  return out
+}
+
+// ---------- Email builders ----------
 
 const cardRow = (k: string, v: string) =>
   `<tr><td style="padding:8px;border:1px solid #dadce0">${k}</td><td style="padding:8px;border:1px solid #dadce0"><strong>${v}</strong></td></tr>`
@@ -112,21 +199,7 @@ serve(async (req) => {
 
     if (GMAIL_APP_PASSWORD) {
       try {
-        const transporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 465,
-          secure: true,
-          auth: {
-            user: GMAIL_USER,
-            pass: GMAIL_APP_PASSWORD,
-          },
-        })
-        await transporter.sendMail({
-          from: GMAIL_USER,
-          to: app.email,
-          subject,
-          html,
-        })
+        await smtpSend(app.email, subject, html)
         sent = true
       } catch (e) {
         errMsg = `SMTP error: ${String(e)}`
