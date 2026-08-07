@@ -58,7 +58,7 @@ async function smtpSend(to: string, subject: string, html: string): Promise<void
 
   try {
     await expect('220') // banner
-    await write(`EHLO ${GMAIL_USER}`)
+    await write(`EHLO sevak-library.example.com`)
     await expect('250')
     // Gmail on implicit TLS (465) accepts AUTH PLAIN directly, no STARTTLS needed.
     await write(`AUTH PLAIN ${b64(`\u0000${GMAIL_USER}\u0000${GMAIL_APP_PASSWORD}`)}`)
