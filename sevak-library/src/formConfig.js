@@ -18,7 +18,7 @@ export const MEMBERSHIP_PRICES = {
   Annual: '19800'
 }
 
-const INDIA_STATES = [
+export const INDIA_STATES = [
   'Maharashtra', 'Gujarat', 'Delhi', 'Karnataka', 'Tamil Nadu', 'West Bengal',
   'Rajasthan', 'Uttar Pradesh', 'Madhya Pradesh', 'Kerala', 'Telangana',
   'Andhra Pradesh', 'Punjab', 'Haryana', 'Bihar', 'Other'

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
-  X, ShieldCheck, BadgeCheck, Mail, MessageCircle, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass, FileText
+  X, ShieldCheck, BadgeCheck, Mail, MessageCircle, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass, FileText, Pencil, Check
 } from 'lucide-react'
-import { getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail, sendPaymentReminder } from '../api.js'
+import { getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail, sendPaymentReminder, updateApplication } from '../api.js'
 import { pdfMemberDoc } from './MembershipFormDoc.jsx'
 import { supabase } from '../supabaseClient.js'
 import { statusLabel } from './meta.js'
-import { formatINR, formatDate } from '../formUtils.js'
+import { formatINR, formatDate, computeEndDate } from '../formUtils.js'
+import { MEMBERSHIP_PRICES, INDIA_STATES } from '../formConfig.js'
+import { validateField } from '../validate.js'
 import { useToast } from './toast.jsx'
 
 const steps = ['SUBMITTED', 'PAYMENT_SUBMITTED', 'VERIFIED', 'APPROVED']
@@ -17,12 +19,52 @@ const stepIcon = {
   APPROVED: <CheckCircle2 size={14} />
 }
 
+const PLAN_OPTIONS = ['Daily', 'Half Monthly', 'Monthly', 'Quarterly', 'Half-Yearly', 'Annual']
+const GENDER_OPTIONS = ['Male', 'Female', 'Other']
+const ID_PROOF_OPTIONS = ['Aadhaar Card', 'PAN Card', 'Driving Licence', 'Passport', 'Student ID', 'Other']
+
+const EDIT_FIELDS = [
+  { id: 'membershipType', label: 'Membership Plan', input: 'select', type: 'radio', options: PLAN_OPTIONS, required: true },
+  { id: 'startDate', label: 'Start Date', input: 'date', type: 'date', required: true },
+  { id: 'endDate', label: 'End Date', input: 'date', type: 'date', required: true },
+  { id: 'membershipFee', label: 'Membership Fee', input: 'text', type: 'text', required: true, pattern: '^[0-9]+(\\.[0-9]{1,2})?$', errorMsg: 'Please enter a valid fee amount.' },
+  { id: 'fullName', label: 'Full Name', input: 'text', type: 'text', required: true },
+  { id: 'guardianName', label: "Guardian's Name", input: 'text', type: 'text', required: true },
+  { id: 'dateOfBirth', label: 'Date of Birth', input: 'date', type: 'date', required: true },
+  { id: 'gender', label: 'Gender', input: 'select', type: 'radio', options: GENDER_OPTIONS, required: true },
+  { id: 'occupation', label: 'Occupation', input: 'text', type: 'text' },
+  { id: 'educationalQualification', label: 'Educational Qualification', input: 'text', type: 'text' },
+  { id: 'mobileNumber', label: 'Mobile Number', input: 'text', type: 'tel', required: true, pattern: '^[0-9]{10}$', errorMsg: 'Please enter a valid 10-digit mobile number.' },
+  { id: 'alternateMobileNumber', label: 'Alternate Mobile Number', input: 'text', type: 'tel', pattern: '^[0-9]{10}$', errorMsg: 'Please enter a valid 10-digit mobile number.' },
+  { id: 'emailAddress', label: 'Email Address', input: 'email', type: 'email', required: true },
+  { id: 'currentAddress', label: 'Current Address', input: 'textarea', type: 'textarea', required: true },
+  { id: 'city', label: 'City', input: 'text', type: 'text', required: true },
+  { id: 'state', label: 'State', input: 'select', type: 'select', options: INDIA_STATES, required: true },
+  { id: 'pinCode', label: 'PIN Code', input: 'text', type: 'tel', required: true, pattern: '^[0-9]{6}$', errorMsg: 'Please enter a valid 6-digit PIN code.' },
+  { id: 'identityProofType', label: 'Identity Proof Type', input: 'select', type: 'radio', options: ID_PROOF_OPTIONS, required: true },
+  { id: 'identityNumber', label: 'Identity Number', input: 'text', type: 'text' },
+  { id: 'applicantSignature', label: 'Applicant Signature', input: 'text', type: 'text', required: true }
+]
+
+function buildEditValues(row) {
+  const d = row.data || {}
+  const v = {}
+  EDIT_FIELDS.forEach((f) => {
+    v[f.id] = d[f.id] ?? ''
+  })
+  v.transactionId = row.transaction_id || ''
+  return v
+}
+
 export default function ApplicationDetail({ row, onClose, refresh }) {
   const toast = useToast()
   const [files, setFiles] = useState({ passport: null, identity: null })
   const [busy, setBusy] = useState('')
   const [confirm, setConfirm] = useState(null)
   const [reason, setReason] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [editValues, setEditValues] = useState(() => buildEditValues(row))
+  const [editErrors, setEditErrors] = useState({})
 
   const d = row.data || {}
 
@@ -32,6 +74,58 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     getFileUrl(row.identity_photo).then((u) => on && setFiles((f) => ({ ...f, identity: u })))
     return () => (on = false)
   }, [row])
+
+  const handleEditChange = (id, value) => {
+    const next = { ...editValues, [id]: value }
+    if (id === 'membershipType' && value && MEMBERSHIP_PRICES[value]) {
+      next.membershipFee = MEMBERSHIP_PRICES[value]
+    }
+    if (id === 'membershipType' || id === 'startDate') {
+      next.endDate = computeEndDate(next.startDate, next.membershipType)
+    }
+    setEditValues(next)
+
+    const field = EDIT_FIELDS.find((f) => f.id === id)
+    if (field) {
+      const err = validateField(field, value, next)
+      setEditErrors((prev) => ({ ...prev, [id]: err }))
+    }
+  }
+
+  const startEdit = () => {
+    setEditValues(buildEditValues(row))
+    setEditErrors({})
+    setEditing(true)
+  }
+
+  const cancelEdit = () => {
+    setEditValues(buildEditValues(row))
+    setEditErrors({})
+    setEditing(false)
+  }
+
+  const saveEdit = async () => {
+    const errs = {}
+    EDIT_FIELDS.forEach((f) => {
+      const e = validateField(f, editValues[f.id], editValues)
+      if (e) errs[f.id] = e
+    })
+    if (Object.values(errs).some(Boolean)) {
+      setEditErrors(errs)
+      toast('Please fix the highlighted fields.', 'error')
+      return
+    }
+    setBusy('save')
+    try {
+      await updateApplication(row.id, editValues, editValues.transactionId)
+      toast('Application details updated.')
+      setEditing(false)
+      refresh()
+    } catch (e) {
+      toast(e.message, 'error')
+    }
+    setBusy('')
+  }
 
   const verify = async () => {
     setBusy('verify')
@@ -191,14 +285,52 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
             </div>
           )}
 
-          <div className="detail-grid">
-            {rows.map(([k, v]) => (
-              <div key={k} className="detail-item">
-                <dt>{k}</dt>
-                <dd>{v}</dd>
+          {editing ? (
+            <div className="edit-form">
+              <p className="edit-hint">End date and fee recalculate automatically when you change the plan or start date.</p>
+              <div className="edit-grid">
+                {EDIT_FIELDS.map((f) => (
+                  <label key={f.id} className={`edit-field ${f.input === 'textarea' ? 'edit-wide' : ''}`}>
+                    <span className="edit-label">{f.label}</span>
+                    {f.input === 'select' ? (
+                      <select value={editValues[f.id] || ''} onChange={(e) => handleEditChange(f.id, e.target.value)}>
+                        <option value="">— Select —</option>
+                        {f.options.map((o) => (
+                          <option key={o} value={o}>{o}</option>
+                        ))}
+                      </select>
+                    ) : f.input === 'textarea' ? (
+                      <textarea value={editValues[f.id] || ''} onChange={(e) => handleEditChange(f.id, e.target.value)} rows={2} />
+                    ) : (
+                      <input
+                        type={f.input}
+                        value={editValues[f.id] || ''}
+                        onChange={(e) => handleEditChange(f.id, e.target.value)}
+                      />
+                    )}
+                    {editErrors[f.id] && <span className="edit-error">{editErrors[f.id]}</span>}
+                  </label>
+                ))}
+                <label className="edit-field">
+                  <span className="edit-label">Transaction / UTR</span>
+                  <input
+                    type="text"
+                    value={editValues.transactionId || ''}
+                    onChange={(e) => handleEditChange('transactionId', e.target.value)}
+                  />
+                </label>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="detail-grid">
+              {rows.map(([k, v]) => (
+                <div key={k} className="detail-item">
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </div>
+          )}
 
           <h4 className="doc-head">Documents</h4>
           <div className="doc-grid">
@@ -228,42 +360,58 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
         </div>
 
         <div className="drawer-actions">
-          {row.status === 'PAYMENT_SUBMITTED' && (
-            <button className="btn-act verify" onClick={verify} disabled={!!busy}>
-              {busy === 'verify' ? <Loader2 size={15} className="spin" /> : <ShieldCheck size={15} />} Verify txn
-            </button>
-          )}
-          {(row.status === 'VERIFIED' || row.status === 'PAYMENT_SUBMITTED') && (
-            <button className="btn-act approve" onClick={approve} disabled={!!busy}>
-              {busy === 'approve' ? <Loader2 size={15} className="spin" /> : <BadgeCheck size={15} />} Approve & send email
-            </button>
-          )}
-          {row.status === 'APPROVED' && (
+          {editing ? (
             <>
-              <button className="btn-act pdf" onClick={printPdf} disabled={!!busy}>
-                {busy === 'pdf' ? <Loader2 size={15} className="spin" /> : <FileText size={15} />} Registration PDF
+              <button className="btn-act" onClick={cancelEdit} disabled={!!busy}>
+                <X size={15} /> Cancel
               </button>
-              <a className="btn-act whatsapp" href={waUrl} target="_blank" rel="noreferrer">
-                <MessageCircle size={15} /> WhatsApp
-              </a>
-              <a className="btn-act email" href={mailUrl}>
-                <Mail size={15} /> Email
-              </a>
+              <button className="btn-act approve" onClick={saveEdit} disabled={!!busy}>
+                {busy === 'save' ? <Loader2 size={15} className="spin" /> : <Check size={15} />} Save changes
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn-act" onClick={startEdit} disabled={!!busy}>
+                <Pencil size={15} /> Edit details
+              </button>
+              {row.status === 'PAYMENT_SUBMITTED' && (
+                <button className="btn-act verify" onClick={verify} disabled={!!busy}>
+                  {busy === 'verify' ? <Loader2 size={15} className="spin" /> : <ShieldCheck size={15} />} Verify txn
+                </button>
+              )}
+              {(row.status === 'VERIFIED' || row.status === 'PAYMENT_SUBMITTED') && (
+                <button className="btn-act approve" onClick={approve} disabled={!!busy}>
+                  {busy === 'approve' ? <Loader2 size={15} className="spin" /> : <BadgeCheck size={15} />} Approve & send email
+                </button>
+              )}
+              {row.status === 'APPROVED' && (
+                <>
+                  <button className="btn-act pdf" onClick={printPdf} disabled={!!busy}>
+                    {busy === 'pdf' ? <Loader2 size={15} className="spin" /> : <FileText size={15} />} Registration PDF
+                  </button>
+                  <a className="btn-act whatsapp" href={waUrl} target="_blank" rel="noreferrer">
+                    <MessageCircle size={15} /> WhatsApp
+                  </a>
+                  <a className="btn-act email" href={mailUrl}>
+                    <Mail size={15} /> Email
+                  </a>
+                </>
+              )}
+              {row.status === 'SUBMITTED' && (
+                <button className="btn-act remind" onClick={sendReminder} disabled={!!busy}>
+                  {busy === 'reminder' ? <Loader2 size={15} className="spin" /> : <Mail size={15} />} Send payment reminder
+                </button>
+              )}
+              {(row.status === 'SUBMITTED' || row.status === 'PAYMENT_SUBMITTED') && (
+                <button className="btn-act reject" onClick={() => setConfirm('reject')} disabled={!!busy}>
+                  <Ban size={15} /> Reject
+                </button>
+              )}
+              <button className="btn-act danger" onClick={() => setConfirm('delete')} disabled={!!busy}>
+                <Trash2 size={15} /> Delete
+              </button>
             </>
           )}
-          {row.status === 'SUBMITTED' && (
-            <button className="btn-act remind" onClick={sendReminder} disabled={!!busy}>
-              {busy === 'reminder' ? <Loader2 size={15} className="spin" /> : <Mail size={15} />} Send payment reminder
-            </button>
-          )}
-          {(row.status === 'SUBMITTED' || row.status === 'PAYMENT_SUBMITTED') && (
-            <button className="btn-act reject" onClick={() => setConfirm('reject')} disabled={!!busy}>
-              <Ban size={15} /> Reject
-            </button>
-          )}
-          <button className="btn-act danger" onClick={() => setConfirm('delete')} disabled={!!busy}>
-            <Trash2 size={15} /> Delete
-          </button>
         </div>
 
         {confirm && (

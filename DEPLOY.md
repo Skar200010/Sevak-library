@@ -22,10 +22,12 @@ How to push the current code to production (frontend + Supabase backend).
 
 ## 2. Database migration
 
-The only pending migration is `supabase/migrations/0004_resume_payment.sql`
-(extends `get_application_by_ref` to return payment fields).
+The pending migrations are `supabase/migrations/0004_resume_payment.sql`
+(extends `get_application_by_ref` to return payment fields) and
+`supabase/migrations/0007_edit_application.sql` (adds the staff
+`update_application` RPC for editing applicant details in the admin panel).
 
-Apply it in the **Supabase Dashboard → SQL Editor**:
+Apply them in the **Supabase Dashboard → SQL Editor**:
 1. Open https://supabase.com/dashboard/project/wubjaxhrduzeidzqutoq
 2. SQL Editor → new query
 3. Paste the contents of `supabase/migrations/0004_resume_payment.sql` and Run.

@@ -64,6 +64,16 @@ export async function resolvePhotoUrls(rows) {
   return results.map((u) => u ?? null)
 }
 
+export async function updateApplication(id, data, transactionId) {
+  const { data: row, error } = await supabase.rpc('update_application', {
+    p_id: id,
+    p_data: data,
+    p_transaction_id: transactionId || null
+  })
+  if (error) throw new Error(error.message)
+  return row
+}
+
 export async function rejectApplication(id, reason) {
   const { data, error } = await supabase.rpc('reject_application', {
     p_id: id,
