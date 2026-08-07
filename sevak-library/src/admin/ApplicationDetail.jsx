@@ -74,17 +74,6 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     setBusy('')
   }
 
-  const resend = async () => {
-    setBusy('resend')
-    try {
-      await resendMembershipEmail(row.id)
-      toast('Membership email re-sent.')
-    } catch (e) {
-      toast(e.message, 'error')
-    }
-    setBusy('')
-  }
-
   const m = row.mobile ? row.mobile.replace(/\D/g, '') : ''
   const waNumber = m.length === 10 ? `91${m}` : m
   const messageText = [
@@ -247,9 +236,6 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
               <a className="btn-act email" href={mailUrl}>
                 <Mail size={15} /> Email
               </a>
-              <button className="btn-act resend" onClick={resend} disabled={!!busy}>
-                {busy === 'resend' ? <Loader2 size={15} className="spin" /> : <Mail size={15} />} Resend email
-              </button>
             </>
           )}
           {row.status === 'SUBMITTED' && (
