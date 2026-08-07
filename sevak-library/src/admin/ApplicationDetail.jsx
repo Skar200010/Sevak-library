@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  X, ShieldCheck, BadgeCheck, Mail, MessageCircle, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass, FileText, Pencil, Check
+  X, ShieldCheck, BadgeCheck, Mail, MessageCircle, Ban, Trash2, ExternalLink, Loader2, CheckCircle2, XCircle, Hourglass, FileText, Pencil, Check, ImagePlus
 } from 'lucide-react'
-import { getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail, sendPaymentReminder, updateApplication } from '../api.js'
+import {
+  getFileUrl, rejectApplication, deleteApplication, resendMembershipEmail, sendPaymentReminder,
+  updateApplication, uploadApplicationPhoto, deleteApplicationPhoto
+} from '../api.js'
 import { pdfMemberDoc } from './MembershipFormDoc.jsx'
 import { supabase } from '../supabaseClient.js'
 import { statusLabel } from './meta.js'
 import { formatINR, formatDate, computeEndDate } from '../formUtils.js'
 import { MEMBERSHIP_PRICES, INDIA_STATES } from '../formConfig.js'
-import { validateField } from '../validate.js'
+import { validateField, validateIdentityDocument } from '../validate.js'
 import { useToast } from './toast.jsx'
 
 const steps = ['SUBMITTED', 'PAYMENT_SUBMITTED', 'VERIFIED', 'APPROVED']
@@ -56,6 +59,53 @@ function buildEditValues(row) {
   return v
 }
 
+const DRAFT_KEY = 'sevakAdminEditDraft'
+const DRAFT_TTL = 24 * 60 * 60 * 1000
+
+function readDrafts() {
+  try {
+    return JSON.parse(localStorage.getItem(DRAFT_KEY)) || {}
+  } catch {
+    return {}
+  }
+}
+
+function writeDrafts(map) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(map))
+  } catch {
+    // storage unavailable - drafts are best-effort only
+  }
+}
+
+function getDraft(appId) {
+  const map = readDrafts()
+  const d = map[String(appId)]
+  if (!d) return null
+  if (Date.now() - (d.at || 0) > DRAFT_TTL) {
+    const m = readDrafts()
+    delete m[String(appId)]
+    writeDrafts(m)
+    return null
+  }
+  return d
+}
+
+function saveDraft(appId, draft) {
+  const map = readDrafts()
+  map[String(appId)] = draft
+  Object.keys(map).forEach((k) => {
+    if (Date.now() - (map[k].at || 0) > DRAFT_TTL) delete map[k]
+  })
+  writeDrafts(map)
+}
+
+function clearDraft(appId) {
+  const map = readDrafts()
+  delete map[String(appId)]
+  writeDrafts(map)
+}
+
 export default function ApplicationDetail({ row, onClose, refresh }) {
   const toast = useToast()
   const [files, setFiles] = useState({ passport: null, identity: null })
@@ -65,6 +115,11 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
   const [editing, setEditing] = useState(false)
   const [editValues, setEditValues] = useState(() => buildEditValues(row))
   const [editErrors, setEditErrors] = useState({})
+  const [newPhotos, setNewPhotos] = useState({ passport: null, identity: null })
+  const [newPhotoPrev, setNewPhotoPrev] = useState({ passport: null, identity: null })
+  const [newPhotoErr, setNewPhotoErr] = useState({ passport: '', identity: '' })
+  const baseUpdatedAt = useRef(null)
+  const previewUrls = useRef({ passport: null, identity: null })
 
   const d = row.data || {}
 
@@ -75,6 +130,12 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     return () => (on = false)
   }, [row])
 
+  useEffect(() => {
+    return () => {
+      Object.values(previewUrls.current).forEach((u) => u && URL.revokeObjectURL(u))
+    }
+  }, [])
+
   const handleEditChange = (id, value) => {
     const next = { ...editValues, [id]: value }
     if (id === 'membershipType' && value && MEMBERSHIP_PRICES[value]) {
@@ -84,6 +145,7 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
       next.endDate = computeEndDate(next.startDate, next.membershipType)
     }
     setEditValues(next)
+    saveDraft(row.id, { baseUpdatedAt: baseUpdatedAt.current, values: next, at: Date.now() })
 
     const field = EDIT_FIELDS.find((f) => f.id === id)
     if (field) {
@@ -92,15 +154,57 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     }
   }
 
+  const resetPhotos = () => {
+    Object.values(previewUrls.current).forEach((u) => u && URL.revokeObjectURL(u))
+    previewUrls.current = { passport: null, identity: null }
+    setNewPhotos({ passport: null, identity: null })
+    setNewPhotoPrev({ passport: null, identity: null })
+    setNewPhotoErr({ passport: '', identity: '' })
+  }
+
+  const onPhotoChange = async (key, file) => {
+    if (!file) return
+    const err = await validateIdentityDocument(file)
+    if (err) {
+      setNewPhotoErr((prev) => ({ ...prev, [key]: err }))
+      setNewPhotos((prev) => ({ ...prev, [key]: null }))
+      return
+    }
+    if (previewUrls.current[key]) URL.revokeObjectURL(previewUrls.current[key])
+    const url = URL.createObjectURL(file)
+    previewUrls.current = { ...previewUrls.current, [key]: url }
+    setNewPhotoPrev((prev) => ({ ...prev, [key]: url }))
+    setNewPhotos((prev) => ({ ...prev, [key]: file }))
+    setNewPhotoErr((prev) => ({ ...prev, [key]: '' }))
+  }
+
+  const clearNewPhoto = (key) => {
+    if (previewUrls.current[key]) URL.revokeObjectURL(previewUrls.current[key])
+    previewUrls.current = { ...previewUrls.current, [key]: null }
+    setNewPhotoPrev((prev) => ({ ...prev, [key]: null }))
+    setNewPhotos((prev) => ({ ...prev, [key]: null }))
+    setNewPhotoErr((prev) => ({ ...prev, [key]: '' }))
+  }
+
   const startEdit = () => {
-    setEditValues(buildEditValues(row))
+    const draft = getDraft(row.id)
+    if (draft && draft.values && draft.baseUpdatedAt === row.updated_at) {
+      setEditValues({ ...draft.values })
+      toast('Restored unsaved edits from your last session.')
+    } else {
+      setEditValues(buildEditValues(row))
+    }
+    baseUpdatedAt.current = row.updated_at || null
     setEditErrors({})
+    resetPhotos()
     setEditing(true)
   }
 
   const cancelEdit = () => {
+    clearDraft(row.id)
     setEditValues(buildEditValues(row))
     setEditErrors({})
+    resetPhotos()
     setEditing(false)
   }
 
@@ -110,18 +214,41 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
       const e = validateField(f, editValues[f.id], editValues)
       if (e) errs[f.id] = e
     })
+    if (newPhotoErr.passport || newPhotoErr.identity) {
+      toast('Please check the selected photos.', 'error')
+      return
+    }
     if (Object.values(errs).some(Boolean)) {
       setEditErrors(errs)
       toast('Please fix the highlighted fields.', 'error')
       return
     }
     setBusy('save')
+    const uploaded = []
     try {
-      await updateApplication(row.id, editValues, editValues.transactionId)
+      const photos = {}
+      if (newPhotos.passport) {
+        photos.passport = await uploadApplicationPhoto(row.ref, 'passport', newPhotos.passport)
+        uploaded.push(photos.passport)
+      }
+      if (newPhotos.identity) {
+        photos.identity = await uploadApplicationPhoto(row.ref, 'identity', newPhotos.identity)
+        uploaded.push(photos.identity)
+      }
+      const oldPassport = row.passport_photo
+      const oldIdentity = row.identity_photo
+      await updateApplication(row.id, editValues, editValues.transactionId, photos)
+      clearDraft(row.id)
+      const cleanup = []
+      if (photos.passport && oldPassport) cleanup.push(deleteApplicationPhoto(oldPassport))
+      if (photos.identity && oldIdentity) cleanup.push(deleteApplicationPhoto(oldIdentity))
+      Promise.allSettled(cleanup)
       toast('Application details updated.')
       setEditing(false)
+      resetPhotos()
       refresh()
     } catch (e) {
+      uploaded.forEach((p) => deleteApplicationPhoto(p).catch(() => {}))
       toast(e.message, 'error')
     }
     setBusy('')
@@ -334,28 +461,46 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
 
           <h4 className="doc-head">Documents</h4>
           <div className="doc-grid">
-            <div className="doc-card">
-              <span className="doc-label">Passport photo</span>
-              {files.passport ? (
-                <a href={files.passport} target="_blank" rel="noreferrer">
-                  <img src={files.passport} alt="Passport" />
-                  <span className="doc-open"><ExternalLink size={13} /> Open</span>
-                </a>
-              ) : (
-                <p className="admin-empty">No file</p>
-              )}
-            </div>
-            <div className="doc-card">
-              <span className="doc-label">Identity proof</span>
-              {files.identity ? (
-                <a href={files.identity} target="_blank" rel="noreferrer">
-                  <img src={files.identity} alt="Identity proof" />
-                  <span className="doc-open"><ExternalLink size={13} /> Open</span>
-                </a>
-              ) : (
-                <p className="admin-empty">No file</p>
-              )}
-            </div>
+            {[
+              { key: 'passport', label: 'Passport photo', current: files.passport },
+              { key: 'identity', label: 'Identity proof', current: files.identity }
+            ].map(({ key, label, current }) => (
+              <div key={key} className="doc-card">
+                <span className="doc-label">{label}</span>
+                {newPhotoPrev[key] ? (
+                  <div className="doc-preview">
+                    <img src={newPhotoPrev[key]} alt={label} />
+                    <span className="doc-new-tag">New photo</span>
+                  </div>
+                ) : current ? (
+                  <a href={current} target="_blank" rel="noreferrer">
+                    <img src={current} alt={label} />
+                    <span className="doc-open"><ExternalLink size={13} /> Open</span>
+                  </a>
+                ) : (
+                  <p className="admin-empty">No file</p>
+                )}
+                {editing && (
+                  <div className="doc-replace">
+                    <label className="doc-replace-btn">
+                      <ImagePlus size={13} /> Replace
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        hidden
+                        onChange={(e) => onPhotoChange(key, e.target.files[0])}
+                      />
+                    </label>
+                    {newPhotos[key] && (
+                      <button type="button" className="doc-remove-btn" onClick={() => clearNewPhoto(key)}>
+                        <X size={13} /> Remove
+                      </button>
+                    )}
+                  </div>
+                )}
+                {newPhotoErr[key] && <p className="edit-error doc-err">{newPhotoErr[key]}</p>}
+              </div>
+            ))}
           </div>
         </div>
 

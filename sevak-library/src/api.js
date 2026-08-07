@@ -64,14 +64,26 @@ export async function resolvePhotoUrls(rows) {
   return results.map((u) => u ?? null)
 }
 
-export async function updateApplication(id, data, transactionId) {
+export async function updateApplication(id, data, transactionId, photos = {}) {
   const { data: row, error } = await supabase.rpc('update_application', {
     p_id: id,
     p_data: data,
-    p_transaction_id: transactionId || null
+    p_transaction_id: transactionId || null,
+    p_passport_photo: photos.passport || null,
+    p_identity_photo: photos.identity || null
   })
   if (error) throw new Error(error.message)
   return row
+}
+
+export async function uploadApplicationPhoto(ref, key, file) {
+  return uploadFile(ref, key, file)
+}
+
+export async function deleteApplicationPhoto(path) {
+  if (!path) return
+  const { error } = await supabase.storage.from(BUCKET).remove([path])
+  if (error) throw new Error(error.message)
 }
 
 export async function rejectApplication(id, reason) {

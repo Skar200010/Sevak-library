@@ -1140,6 +1140,84 @@
   border-radius: 7px;
 }
 
+.doc-preview {
+  position: relative;
+}
+
+.doc-preview img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.doc-new-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(26, 127, 75, 0.92);
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+.doc-replace {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid #f0f0f0;
+  background: #f8faf9;
+}
+
+.doc-replace-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.doc-replace-btn:hover {
+  border-color: var(--green);
+  color: var(--green-dark);
+}
+
+.doc-remove-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #b91c1c;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.doc-remove-btn:hover {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.doc-err {
+  display: block;
+  padding: 6px 12px;
+}
+
 .drawer-actions {
   display: flex;
   flex-wrap: wrap;
