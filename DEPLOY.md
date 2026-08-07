@@ -45,7 +45,7 @@ Dashboard steps (easiest):
 2. **Secrets**
    - Edge Functions → Secrets (or project Settings → Edge Functions)
    - Ensure these exist:
-     - `GMAIL_USER=being.sevak@gmail.com`
+     - `GMAIL_USER=library.sevak@gmail.com`
      - `GMAIL_APP_PASSWORD=<the 16-char app password>`
      - `APP_URL=https://sevak-library.vercel.app`
      - `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` (auto-provided, but verify)
@@ -59,7 +59,7 @@ CLI alternative (only if you log in with the account that owns the project):
 ```bash
 supabase login
 supabase link --project-ref wubjaxhrduzeidzqutoq
-supabase secrets set GMAIL_USER=being.sevak@gmail.com
+supabase secrets set GMAIL_USER=library.sevak@gmail.com
 supabase secrets set GMAIL_APP_PASSWORD="<app password>"
 supabase secrets set APP_URL=https://sevak-library.vercel.app
 supabase functions deploy send-membership-email
@@ -69,12 +69,12 @@ supabase functions update send-membership-email --verify-jwt false
 ## 4. Smoke test
 
 1. Submit a test application on https://sevak-library.vercel.app/#/
-2. Expect a **payment email from being.sevak@gmail.com** with a
+2. Expect a **payment email from library.sevak@gmail.com** with a
    "Complete my payment" button linking to `#/pay/<ref>`.
 3. Open `#/pay/<ref>` → checkout should load with the correct plan/fee/ref.
 4. Complete payment (enter a test txn id) → status becomes PAYMENT_SUBMITTED.
 5. Admin: sign in at `#/admin/login`, verify → approve → applicant gets the
-   membership ID email from being.sevak@gmail.com.
+   membership ID email from library.sevak@gmail.com.
 6. If an email is missing, check Edge Functions → `send-membership-email` → Logs
    (it logs SMTP errors and writes every attempt to the `mail_log` table).
 
