@@ -64,7 +64,7 @@ export default function LoginView() {
 
       <div className="admin-login-card">
         <div className="admin-login-logo">
-          <LibraryBig size={30} />
+          <img src="/sevak-logo.png" alt="Sevak Library logo" />
         </div>
         <h1>Sevak Library</h1>
         <p className="admin-login-sub">Staff administration portal</p>

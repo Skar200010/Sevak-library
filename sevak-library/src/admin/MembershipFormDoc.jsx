@@ -58,7 +58,7 @@ function a4Html(row, photoUrl) {
 
   return `
     <div class="doc-a4">
-      <div class="doc-logo"><img src="/logo.svg" alt="Sevak Library" /></div>
+      <div class="doc-logo"><img src="/sevak-logo.png" alt="Sevak Library" /></div>
       <div class="doc-header">
         <h1>Sevak Library</h1>
         <h2>Library Membership Registration Form</h2>

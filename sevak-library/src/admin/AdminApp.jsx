@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
-import { LibraryBig, LayoutDashboard, Users, Tag, LogOut, Loader2, Inbox } from 'lucide-react'
+import { LayoutDashboard, Users, Tag, LogOut, Loader2, Inbox } from 'lucide-react'
 import { Routes, Route, NavLink, useNavigate, useLocation, useParams } from 'react-router-dom'
 import '../admin-dashboard.css'
 import { supabase } from '../supabaseClient.js'
@@ -95,7 +95,7 @@ export default function AdminApp() {
       <div className="admin-shell">
         <aside className="admin-sidebar">
           <div className="admin-brand">
-            <span className="admin-brand-mark"><LibraryBig size={20} /></span>
+            <span className="admin-brand-mark"><img src="/sevak-logo.png" alt="Sevak Library logo" /></span>
             <span className="admin-brand-text">
               <strong>Sevak Library</strong>
               <small>Admin</small>

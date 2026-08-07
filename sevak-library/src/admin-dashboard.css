@@ -57,16 +57,23 @@
 }
 
 .admin-login-logo {
-  width: 62px;
-  height: 62px;
+  width: 92px;
+  height: 92px;
   margin: 0 auto 14px;
-  border-radius: 16px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  background: linear-gradient(135deg, var(--green), var(--green-dark));
-  box-shadow: 0 8px 22px rgba(18, 97, 56, 0.35);
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(26, 127, 75, 0.15);
+  box-shadow: 0 8px 22px rgba(18, 97, 56, 0.18);
+}
+
+.admin-login-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .admin-login-card h1 {
@@ -231,13 +238,20 @@
 }
 
 .admin-brand-mark {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .admin-brand-text {
@@ -1859,6 +1873,7 @@
 .doc-logo img {
   width: 64px;
   height: 64px;
+  object-fit: contain;
 }
 
 .doc-header {

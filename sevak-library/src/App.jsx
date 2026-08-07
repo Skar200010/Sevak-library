@@ -333,6 +333,7 @@ export default function App() {
   return (
     <div className="page">
       <header className="form-header">
+        <div className="form-header-logo"><img src="/sevak-logo.png" alt="Sevak Library logo" /></div>
         <h1>{FORM_META.title}</h1>
         <h2>{FORM_META.subtitle}</h2>
         <p className="initiative">{FORM_META.initiative}</p>
