@@ -142,6 +142,7 @@ function Field({ field, value, onChange, error }) {
               id={`${field.id}-camera`}
               type="file"
               accept="image/*"
+              capture="user"
               onChange={pick}
             />
             <span>Open Camera</span>
