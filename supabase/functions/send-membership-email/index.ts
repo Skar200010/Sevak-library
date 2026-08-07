@@ -6,6 +6,7 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const GMAIL_USER = Deno.env.get('GMAIL_USER') ?? 'library.sevak@gmail.com'
 const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD') ?? ''
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://sevak-library.vercel.app'
+const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? ''
 
 const json = (payload: unknown, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -166,16 +167,96 @@ function buildPaymentEmail(app: any) {
   return { subject, html }
 }
 
+function buildRenewalEmail(app: any) {
+  const subject = 'Renew your Sevak Library membership'
+  const html = shell(`
+    <p>Dear <strong>${app.full_name ?? ''}</strong>,</p>
+    <p>Thank you for being a member of Sevak Library. Your membership period has now ended.</p>
+    <table style="border-collapse:collapse;width:100%;margin:16px 0">
+      ${cardRow('Membership ID', app.membership_id ?? '')}
+      ${cardRow('Membership Type', app.membership_type ?? '')}
+      ${cardRow('Previous Start Date', app.start_date ?? '')}
+      ${cardRow('Previous End Date', app.end_date ?? '')}
+    </table>
+    <p>You can renew your membership by submitting a fresh application below. Turning Pages, Changing Lives — we would love to have you back.</p>
+    <p style="text-align:center">${btn(APP_URL, 'Renew my membership')}</p>
+    <p style="color:#5f6368;font-size:12.5px">Or copy this link into your browser: <br><span style="color:#1a7f4b">${APP_URL}</span></p>
+  `)
+  return { subject, html }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return json({})
 
   try {
     const body = await req.json()
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE)
+
+    // Automatic one-off renewal reminder, triggered daily by pg_cron.
+    if (body?.mode === 'renewal_scan') {
+      if (!CRON_SECRET) return json({ error: 'CRON_SECRET is not configured' }, 500)
+      if (req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') !== CRON_SECRET) {
+        return json({ error: 'Unauthorized', errorUnMessage: 'authentication', error_code: 'unauthorized' }, 401)
+      }
+
+      console.log('[renewal_scan] starting')
+      const today = new Date().toISOString().slice(0, 10)
+      const { data: due, error: qErr } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('status', 'APPROVED')
+        .eq('renewal_email_sent', false)
+        .lte('end_date', today)
+
+      if (qErr) return json({ error: qErr.message }, 500)
+
+      const sentIds: number[] = []
+      const failIds: number[] = []
+      for (const app of due ?? []) {
+        const { subject, html } = buildRenewalEmail(app)
+        let sent = false
+        let errMsg: string | null = null
+        if (GMAIL_APP_PASSWORD) {
+          try {
+            await smtpSend(app.email, subject, html)
+            sent = true
+          } catch (e) {
+            errMsg = `SMTP error: ${String(e)}`
+          }
+        } else {
+          errMsg = 'GMAIL_APP_PASSWORD not configured - email not sent'
+        }
+
+        await supabase.from('mail_log').insert({
+          application_id: app.id,
+          to_email: app.email,
+          subject,
+          body: html,
+          membership_id: app.membership_id ?? null,
+          sent,
+          error: errMsg,
+        })
+
+        if (sent) {
+          sentIds.push(app.id)
+          await supabase.from('applications').update({ renewal_email_sent: true }).eq('id', app.id)
+        } else {
+          failIds.push(app.id)
+        }
+      }
+
+      return json({
+        ok: true,
+        mode: 'renewal_scan',
+        processed: due?.length ?? 0,
+        sentIds,
+        failIds,
+      })
+    }
+
     const applicationId = body.applicationId
     const type = body.type === 'payment' ? 'payment' : 'membership'
     if (!applicationId) return json({ error: 'applicationId is required' }, 400)
-
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE)
 
     const { data: app, error } = await supabase
       .from('applications')
