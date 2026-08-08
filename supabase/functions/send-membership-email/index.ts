@@ -147,7 +147,6 @@ function buildMembershipEmail(app: any) {
 
 function buildPaymentEmail(app: any) {
   const subject = 'Complete your Sevak Library membership payment'
-  const fee = app.membership_fee ? `Rs. ${app.membership_fee}` : '—'
   const payUrl = `${APP_URL}/#/pay/${encodeURIComponent(app.ref ?? '')}`
   const html = shell(`
     <p>Dear <strong>${app.full_name ?? ''}</strong>,</p>
@@ -155,7 +154,6 @@ function buildPaymentEmail(app: any) {
     <table style="border-collapse:collapse;width:100%;margin:16px 0">
       ${cardRow('Application Reference', app.ref ?? '')}
       ${cardRow('Membership Type', app.membership_type ?? '')}
-      ${cardRow('Amount to pay', fee)}
       ${cardRow('Start Date', app.start_date ?? '')}
       ${cardRow('End Date', app.end_date ?? '')}
     </table>
