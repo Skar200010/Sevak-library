@@ -39,7 +39,7 @@ const EDIT_FIELDS = [
   { id: 'educationalQualification', label: 'Educational Qualification', input: 'text', type: 'text' },
   { id: 'mobileNumber', label: 'Mobile Number', input: 'text', type: 'tel', required: true, pattern: '^[0-9]{10}$', errorMsg: 'Please enter a valid 10-digit mobile number.' },
   { id: 'alternateMobileNumber', label: 'Alternate Mobile Number', input: 'text', type: 'tel', pattern: '^[0-9]{10}$', errorMsg: 'Please enter a valid 10-digit mobile number.' },
-  { id: 'emailAddress', label: 'Email Address', input: 'email', type: 'email', required: true },
+  { id: 'emailAddress', label: 'Email Address', input: 'email', type: 'email' },
   { id: 'currentAddress', label: 'Current Address', input: 'textarea', type: 'textarea', required: true },
   { id: 'city', label: 'City', input: 'text', type: 'text', required: true },
   { id: 'state', label: 'State', input: 'select', type: 'select', options: INDIA_STATES, required: true },
@@ -357,6 +357,11 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     setBusy('')
   }
 
+  const paymentInfo =
+    !row.transaction_id && (d.amountReceived || d.paymentMode)
+      ? [d.paymentMode, d.amountReceived].filter(Boolean).join(' · ')
+      : ''
+
   const rows = [
     ['Full name', row.full_name],
     ['Email', row.email],
@@ -365,6 +370,7 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     ['Date of birth', d.dateOfBirth && formatDate(d.dateOfBirth)],
     ['Gender', d.gender],
     ['Category', d.category],
+    ['Degree', d.degree],
     ['Occupation', d.occupation],
     ['Qualification', d.educationalQualification],
     ['Address', d.currentAddress && [d.currentAddress, d.city, d.state, d.pinCode].filter(Boolean).join(', ')],
@@ -373,9 +379,11 @@ export default function ApplicationDetail({ row, onClose, refresh }) {
     ['Start → End', row.start_date && row.end_date ? `${formatDate(row.start_date)} → ${formatDate(row.end_date)}` : '—'],
     ['Identity proof', row.identity_proof_type ? `${row.identity_proof_type}${row.identity_number ? ` · ${row.identity_number}` : ''}` : '—'],
     ['Payment ref', row.payment_ref],
+    ...(paymentInfo ? [['Payment', paymentInfo]] : []),
     ['Transaction / UTR', row.transaction_id || '—'],
     ['Membership ID', row.membership_id || '—'],
-    ['Signature', d.applicantSignature]
+    ['Signature', d.applicantSignature],
+    ...(d.remarks ? [['Remarks', d.remarks]] : [])
   ].filter(([, v]) => v)
 
   const stepIdx = steps.indexOf(row.status)
