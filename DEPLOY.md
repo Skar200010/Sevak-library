@@ -32,8 +32,11 @@ replacement for applications),
 staff-only CRUD policies for the admin coupon section),
 `supabase/migrations/0010_import_members.sql` (adds the staff `import_members`
 RPC for the admin "Import Members" spreadsheet upload),
-and `supabase/migrations/0011_load_existing_members.sql` (one-time backfill of
-the existing member list into the database).
+`supabase/migrations/0011_load_existing_members.sql` (one-time backfill of
+the existing member list into the database),
+and `supabase/migrations/0012_imports_awaiting_verification.sql` (moves the
+backfilled members to "awaiting verification" and makes future imports start
+there too).
 
 Apply them in the **Supabase Dashboard → SQL Editor**:
 1. Open https://supabase.com/dashboard/project/wubjaxhrduzeidzqutoq

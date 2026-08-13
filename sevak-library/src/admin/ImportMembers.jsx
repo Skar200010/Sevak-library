@@ -73,7 +73,7 @@ export default function ImportMembers({ onImported }) {
           <h2>Import Members</h2>
           <p className="admin-sub">
             Upload an Excel/CSV file to add existing members. They are imported as
-            approved members with auto-generated IDs (SL-YYYY-XXXX). Members whose
+            "awaiting verification" with auto-generated IDs (SL-YYYY-XXXX). Members whose
             mobile number already exists are skipped.
           </p>
         </div>
@@ -193,7 +193,7 @@ export default function ImportMembers({ onImported }) {
                         {r.issues.length ? (
                           <span className="admin-badge st-rejected">Check row</span>
                         ) : (
-                          <span className="admin-badge st-approved">Approved</span>
+                          <span className="admin-badge st-payment">Awaiting verification</span>
                         )}
                       </td>
                     </tr>
