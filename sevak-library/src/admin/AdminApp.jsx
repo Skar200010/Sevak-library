@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy } from 'react'
 import gsap from 'gsap'
-import { LayoutDashboard, Users, Tag, LogOut, Loader2, Inbox } from 'lucide-react'
+import { LayoutDashboard, Users, Tag, LogOut, Loader2, Inbox, Upload } from 'lucide-react'
 import { Routes, Route, NavLink, useNavigate, useLocation, useParams } from 'react-router-dom'
 import '../admin-dashboard.css'
 import { supabase } from '../supabaseClient.js'
@@ -10,6 +11,8 @@ import Applications from './Applications.jsx'
 import ApplicationDetail from './ApplicationDetail.jsx'
 import Coupons from './Coupons.jsx'
 import { useApps } from './useApps.js'
+
+const ImportMembers = lazy(() => import('./ImportMembers.jsx'))
 
 function LoadingScreen() {
   return (
@@ -79,6 +82,7 @@ export default function AdminApp() {
   const nav = [
     { to: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={19} />, end: true },
     { to: '/admin/applications', label: 'Applications', icon: <Users size={19} /> },
+    { to: '/admin/import', label: 'Import Members', icon: <Upload size={19} /> },
     { to: '/admin/coupons', label: 'Coupons', icon: <Tag size={19} /> }
   ]
 
@@ -136,6 +140,18 @@ export default function AdminApp() {
                 <Route index element={<Dashboard rows={rows || []} onOpen={onOpen} />} />
                 <Route path="applications" element={<Applications rows={rows || []} onOpen={onOpen} />} />
                 <Route path="applications/:id" element={<DetailRoute rows={rows || []} refresh={refresh} />} />
+                <Route
+                  path="import"
+                  element={
+                    <Suspense
+                      fallback={
+                        <div className="admin-loading"><Loader2 size={24} className="spin" /><p>Loading import...</p></div>
+                      }
+                    >
+                      <ImportMembers onImported={refresh} />
+                    </Suspense>
+                  }
+                />
                 <Route path="coupons" element={<Coupons rows={rows || []} />} />
               </Routes>
             )}

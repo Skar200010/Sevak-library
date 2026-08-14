@@ -109,6 +109,12 @@ export async function deleteCoupon(id) {
   if (error) throw new Error(error.message)
 }
 
+export async function importMembers(rows) {
+  const { data, error } = await supabase.rpc('import_members', { p_rows: rows })
+  if (error) throw new Error(error.message)
+  return data && data[0] ? data[0] : { imported: 0, skipped: 0 }
+}
+
 export async function sendCouponEmail(couponId, applicationIds) {
   const {
     data: { session }
