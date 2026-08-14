@@ -27,26 +27,26 @@ const GENDER_OPTIONS = ['Male', 'Female', 'Other']
 const ID_PROOF_OPTIONS = ['Aadhaar Card', 'PAN Card', 'Driving Licence', 'Passport', 'Student ID', 'Other']
 
 const EDIT_FIELDS = [
-  { id: 'membershipType', label: 'Membership Plan', input: 'select', type: 'radio', options: PLAN_OPTIONS, required: true },
-  { id: 'startDate', label: 'Start Date', input: 'date', type: 'date', required: true },
-  { id: 'endDate', label: 'End Date', input: 'date', type: 'date', required: true },
-  { id: 'membershipFee', label: 'Membership Fee', input: 'text', type: 'text', required: true, pattern: '^[0-9]+(\\.[0-9]{1,2})?$', errorMsg: 'Please enter a valid fee amount.' },
-  { id: 'fullName', label: 'Full Name', input: 'text', type: 'text', required: true },
-  { id: 'guardianName', label: "Guardian's Name", input: 'text', type: 'text', required: true },
-  { id: 'dateOfBirth', label: 'Date of Birth', input: 'date', type: 'date', required: true },
-  { id: 'gender', label: 'Gender', input: 'select', type: 'radio', options: GENDER_OPTIONS, required: true },
+  { id: 'membershipType', label: 'Membership Plan', input: 'select', type: 'radio', options: PLAN_OPTIONS },
+  { id: 'startDate', label: 'Start Date', input: 'date', type: 'date' },
+  { id: 'endDate', label: 'End Date', input: 'date', type: 'date' },
+  { id: 'membershipFee', label: 'Membership Fee', input: 'text', type: 'text', pattern: '^[0-9]+(\\.[0-9]{1,2})?$', errorMsg: 'Please enter a valid fee amount.' },
+  { id: 'fullName', label: 'Full Name', input: 'text', type: 'text' },
+  { id: 'guardianName', label: "Guardian's Name", input: 'text', type: 'text' },
+  { id: 'dateOfBirth', label: 'Date of Birth', input: 'date', type: 'date' },
+  { id: 'gender', label: 'Gender', input: 'select', type: 'radio', options: GENDER_OPTIONS },
   { id: 'occupation', label: 'Occupation', input: 'text', type: 'text' },
   { id: 'educationalQualification', label: 'Educational Qualification', input: 'text', type: 'text' },
-  { id: 'mobileNumber', label: 'Mobile Number', input: 'text', type: 'tel', required: true, pattern: '^[0-9]{10}$', errorMsg: 'Please enter a valid 10-digit mobile number.' },
+  { id: 'mobileNumber', label: 'Mobile Number', input: 'text', type: 'tel', pattern: '^[0-9]{10}$', errorMsg: 'Please enter a valid 10-digit mobile number.' },
   { id: 'alternateMobileNumber', label: 'Alternate Mobile Number', input: 'text', type: 'tel', pattern: '^[0-9]{10}$', errorMsg: 'Please enter a valid 10-digit mobile number.' },
   { id: 'emailAddress', label: 'Email Address', input: 'email', type: 'email' },
-  { id: 'currentAddress', label: 'Current Address', input: 'textarea', type: 'textarea', required: true },
-  { id: 'city', label: 'City', input: 'text', type: 'text', required: true },
-  { id: 'state', label: 'State', input: 'select', type: 'select', options: INDIA_STATES, required: true },
-  { id: 'pinCode', label: 'PIN Code', input: 'text', type: 'tel', required: true, pattern: '^[0-9]{6}$', errorMsg: 'Please enter a valid 6-digit PIN code.' },
-  { id: 'identityProofType', label: 'Identity Proof Type', input: 'select', type: 'radio', options: ID_PROOF_OPTIONS, required: true },
+  { id: 'currentAddress', label: 'Current Address', input: 'textarea', type: 'textarea' },
+  { id: 'city', label: 'City', input: 'text', type: 'text' },
+  { id: 'state', label: 'State', input: 'select', type: 'select', options: INDIA_STATES },
+  { id: 'pinCode', label: 'PIN Code', input: 'text', type: 'tel', pattern: '^[0-9]{6}$', errorMsg: 'Please enter a valid 6-digit PIN code.' },
+  { id: 'identityProofType', label: 'Identity Proof Type', input: 'select', type: 'radio', options: ID_PROOF_OPTIONS },
   { id: 'identityNumber', label: 'Identity Number', input: 'text', type: 'text' },
-  { id: 'applicantSignature', label: 'Applicant Signature', input: 'text', type: 'text', required: true }
+  { id: 'applicantSignature', label: 'Applicant Signature', input: 'text', type: 'text' }
 ]
 
 function buildEditValues(row) {
